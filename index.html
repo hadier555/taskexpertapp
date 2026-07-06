@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Task Expert – Sign Up</title>
 
-    <!-- Firebase SDKs (same as admin panel) -->
+    <!-- Firebase SDKs (only what's needed) -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js">
     </script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js">
@@ -25,24 +25,176 @@
         }
         body {
             font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-            background: linear-gradient(135deg, #0f3460 0%, #1a4a7a 50%, #2a5298 100%);
+            background: #f5f7fb;
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
             padding: 1rem;
+            position: relative;
         }
 
+        /* ===== LOADING SCREEN (copied from loading.html) ===== */
+        #loadingOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #1e3c72 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            transition: opacity 0.7s ease, visibility 0.7s ease;
+            padding: 20px;
+        }
+        #loadingOverlay.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+        .loader-container {
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
+        }
+
+        .logo-icon {
+            font-size: 72px;
+            color: #fff;
+            margin-bottom: 20px;
+            animation: pulseIcon 1.8s ease-in-out infinite;
+        }
+        @keyframes pulseIcon {
+            0%,
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.08);
+                opacity: 0.8;
+            }
+        }
+
+        .app-title {
+            color: #fff;
+            font-size: 32px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+        .app-subtitle {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 14px;
+            margin-bottom: 40px;
+        }
+
+        .loader-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+            width: 100%;
+            max-width: 280px;
+        }
+        .loader-ring {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: 4px solid rgba(255, 255, 255, 0.15);
+            border-top-color: #fff;
+            border-right-color: #38ef7d;
+            animation: spinRing 1s cubic-bezier(0.6, 0, 0.4, 1) infinite;
+        }
+        @keyframes spinRing {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .loader-bar-track {
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+        }
+        .loader-bar-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #38ef7d, #11998e);
+            border-radius: 4px;
+            transition: width 0.15s linear;
+        }
+
+        .loader-status {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 13px;
+            letter-spacing: 0.5px;
+            text-align: center;
+            min-height: 20px;
+        }
+
+        .loader-dots {
+            display: flex;
+            gap: 6px;
+            justify-content: center;
+        }
+        .loader-dots span {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            animation: dotPulse 1.4s ease-in-out infinite;
+        }
+        .loader-dots span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        .loader-dots span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+        @keyframes dotPulse {
+            0%,
+            80%,
+            100% {
+                transform: scale(0.6);
+                opacity: 0.3;
+            }
+            40% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .loader-footer {
+            position: absolute;
+            bottom: 40px;
+            color: rgba(255, 255, 255, 0.25);
+            font-size: 12px;
+            letter-spacing: 2px;
+        }
+
+        /* ----- CARD (Light theme) ----- */
         .card {
             background: #ffffff;
             max-width: 500px;
             width: 100%;
             padding: 2rem 2rem 2.2rem;
             border-radius: 28px;
-            box-shadow: 0 20px 50px -12px rgba(0, 0, 0, 0.35);
-            transition: opacity 0.3s ease;
+            box-shadow: 0 12px 40px -10px rgba(26, 74, 122, 0.12);
+            transition: opacity 0.4s ease, transform 0.4s ease;
+            opacity: 0;
+            transform: translateY(18px);
             position: relative;
             overflow: hidden;
+        }
+        .card.visible {
+            opacity: 1;
+            transform: translateY(0);
         }
         .card::before {
             content: '';
@@ -51,7 +203,7 @@
             left: 0;
             right: 0;
             height: 4px;
-            background: linear-gradient(90deg, #2a5298, #4a8bc2, #2a5298);
+            background: linear-gradient(90deg, #1a4a7a, #2a7de1, #1a4a7a);
             background-size: 200% 100%;
             animation: shimmer 3s infinite linear;
         }
@@ -78,7 +230,7 @@
             gap: 10px;
         }
         .header h1 i {
-            color: #2a5298;
+            color: #1a4a7a;
         }
         .header p {
             color: #5b6f87;
@@ -116,7 +268,7 @@
             margin-bottom: 2px;
         }
 
-        /* ----- BONUS BOX – REFERRAL BONUS HIDDEN ----- */
+        /* ----- BONUS BOX ----- */
         .bonus-box {
             background: #f7faff;
             border-radius: 16px;
@@ -155,12 +307,11 @@
             align-items: center;
             gap: 6px;
         }
-        /* Referral bonus item is hidden */
         .bonus-item.referral-hidden {
             display: none;
         }
 
-        /* ----- FORM – NO USERNAME FIELD ----- */
+        /* ----- FORM ----- */
         .form-group {
             margin-bottom: 1.1rem;
         }
@@ -172,7 +323,7 @@
             margin-bottom: 4px;
         }
         .form-group label i {
-            color: #2a5298;
+            color: #1a4a7a;
             width: 18px;
         }
         .form-group input {
@@ -201,7 +352,7 @@
             margin-top: 4px;
         }
         .form-group .hint i {
-            color: #2a5298;
+            color: #1a4a7a;
         }
 
         /* ----- GOOGLE BUTTON ----- */
@@ -238,7 +389,7 @@
             flex-shrink: 0;
         }
 
-        /* ----- DOWNLOAD LINK (top) – appears before sign-up ----- */
+        /* ----- DOWNLOAD LINK (top) ----- */
         .download-top {
             text-align: right;
             margin-bottom: 0.2rem;
@@ -297,7 +448,6 @@
             font-weight: 600;
         }
 
-        /* Download button on success card – uses admin link */
         .btn-download {
             display: inline-block;
             width: 100%;
@@ -326,7 +476,6 @@
             filter: grayscale(0.4);
         }
 
-        /* Admin message below download button */
         .download-message {
             background: #f2f6fc;
             border-radius: 12px;
@@ -369,7 +518,7 @@
             padding: 0.8rem 1.8rem;
             border-radius: 40px;
             font-size: 0.95rem;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
             opacity: 0;
             transition: opacity 0.3s ease;
             pointer-events: none;
@@ -391,8 +540,7 @@
             background: #b87a2a;
         }
 
-        /* loader */
-        .loader {
+        .loader-dots-small {
             display: inline-block;
             width: 20px;
             height: 20px;
@@ -427,16 +575,44 @@
                 font-size: 0.9rem;
                 padding: 0.7rem;
             }
+            .app-title {
+                font-size: 26px;
+            }
+            .logo-icon {
+                font-size: 56px;
+            }
         }
     </style>
 </head>
 <body>
 
+    <!-- ===== LOADING OVERLAY (copied from loading.html) ===== -->
+    <div id="loadingOverlay">
+        <div class="loader-container">
+            <div class="logo-icon"><i class="fas fa-tasks"></i></div>
+            <div class="app-title">Task Expert</div>
+            <div class="app-subtitle">Earn Coins • Complete Tasks</div>
+            <div class="loader-wrapper">
+                <div class="loader-ring"></div>
+                <div class="loader-bar-track">
+                    <div class="loader-bar-fill" id="loaderBarFill"></div>
+                </div>
+                <div class="loader-status" id="loaderStatus">
+                    <i class="fas fa-circle" style="color:#38ef7d;font-size:8px;margin-right:4px;"></i> Connecting…
+                </div>
+                <div class="loader-dots">
+                    <span></span><span></span><span></span>
+                </div>
+            </div>
+            <div class="loader-footer">v1.0</div>
+        </div>
+    </div>
+
     <!-- ===== TOAST ===== -->
     <div id="toast" class="toast"></div>
 
     <!-- ===== SIGN-UP CARD ===== -->
-    <div id="signupCard" class="card">
+    <div id="signupCard" class="card hidden">
         <div class="download-top">
             <a href="#" id="topDownloadLink" target="_blank"><i class="fas fa-download"></i> Download App</a>
         </div>
@@ -447,21 +623,17 @@
             <div class="sub"><i class="fas fa-google" style="color:#4285F4;"></i> Sign up with Google and start earning</div>
         </div>
 
-        <!-- Admin Banner (fetched from settings/bannerMessage) -->
         <div id="adminBanner" class="admin-banner">
             <span class="label"><i class="fas fa-bullhorn"></i> Announcement</span>
             <span id="bannerMessage">Welcome!</span>
         </div>
 
-        <!-- Bonus Box – referral bonus hidden -->
         <div class="bonus-box">
             <span class="bonus-item"><i class="fas fa-gift"></i> Sign-up <span class="num" id="signupBonusDisplay">50</span></span>
             <span class="bonus-item referral-hidden"><i class="fas fa-user-friends"></i> Referral <span class="num green" id="referralBonusDisplay">50</span></span>
             <span class="bonus-total"><i class="fas fa-coins"></i> Total <span id="totalBonusDisplay">100</span></span>
         </div>
 
-        <!-- ===== NO USERNAME FIELD – auto-generated from email ===== -->
-        <!-- Only referral field remains, locked if code is from URL -->
         <div class="form-group">
             <label for="referralInput"><i class="fas fa-link"></i> Referral code <span style="font-weight:400;color:#7a8aa0;font-size:0.8rem;">(auto‑filled from link)</span></label>
             <input type="text" id="referralInput" placeholder="No referral code" maxlength="6" disabled />
@@ -474,7 +646,7 @@
         </button>
 
         <div style="text-align:center;font-size:0.75rem;color:#8a9bb0;margin-top:1rem;">
-            <i class="fas fa-shield-alt" style="color:#2a5298;"></i> Secure • No password needed
+            <i class="fas fa-shield-alt" style="color:#1a4a7a;"></i> Secure • No password needed
             <span style="display:block;font-size:0.7rem;margin-top:2px;color:#aabbcc;">
                 Your username will be taken from your Gmail address
             </span>
@@ -503,22 +675,19 @@
             <div class="row total"><span><i class="fas fa-coins" style="color:#f9a825;"></i> Total coins earned</span><span class="val" id="breakTotal">50</span></div>
         </div>
 
-        <!-- Download button – uses admin link -->
         <a href="#" id="downloadBtn" class="btn-download" target="_blank"><i class="fas fa-download"></i> Download App</a>
 
-        <!-- Admin message below download button -->
         <div id="downloadPageMessage" class="download-message">
             <span id="downloadPageText">Get the app for the best experience!</span>
         </div>
 
-        <!-- Referral link sharing -->
         <div style="background:#f0f6fe;border-radius:12px;padding:0.8rem 1rem;margin-top:0.8rem;">
             <div style="font-size:0.8rem;font-weight:600;color:#1d2b41;margin-bottom:4px;">
                 <i class="fas fa-share-alt"></i> Your referral link
             </div>
             <div style="display:flex;gap:6px;align-items:center;background:white;border-radius:30px;padding:3px 3px 3px 14px;border:1px solid #dce3ed;">
                 <input type="text" id="shareLinkInput" readonly style="flex:1;border:none;outline:none;font-size:0.85rem;color:#1e3c72;background:transparent;font-family:'Courier New',monospace;min-width:0;" />
-                <button onclick="copyShareLink()" style="background:#1e3c72;color:white;border:none;border-radius:30px;padding:6px 16px;font-size:0.8rem;font-weight:600;cursor:pointer;white-space:nowrap;transition:0.2s;">
+                <button onclick="copyShareLink()" style="background:#1a3a6a;color:white;border:none;border-radius:30px;padding:6px 16px;font-size:0.8rem;font-weight:600;cursor:pointer;white-space:nowrap;transition:0.2s;">
                     <i class="fas fa-copy"></i> Copy
                 </button>
             </div>
@@ -531,7 +700,7 @@
 
     <script>
         // ================================================================
-        //  FIREBASE CONFIG – SAME AS ADMIN PANEL
+        //  FIREBASE CONFIG
         // ================================================================
         const firebaseConfig = {
             apiKey: "AIzaSyAFlpqi5e3EI1loNu3QWFLOMBjfYyyAusk",
@@ -548,17 +717,17 @@
         const auth = firebase.auth();
         const db = firebase.database();
 
-        // Local persistence
         auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
             .catch(e => console.warn('Persistence error:', e));
 
         // ================================================================
-        //  DEFAULTS (fallback if settings can't be fetched)
+        //  CONSTANTS
         // ================================================================
+        const DOWNLOAD_APK_LINK = 'https://github.com/hadier555/taskexpertapk/releases/download/v1.0/Task.Expert.apk';
+
         const DEFAULTS = {
             signupBonus: 50,
-            referralBonus: 50, // still used for referrer, but not given to new user
-            signupAppLink: '#', // new field from admin panel
+            referralBonus: 50,
             bannerMessage: 'Welcome to Task Expert!',
             downloadPageMessage: 'Get the app and start earning more!'
         };
@@ -568,6 +737,9 @@
         // ================================================================
         const $ = id => document.getElementById(id);
 
+        const loadingOverlay = $('loadingOverlay');
+        const progressBar = $('loaderBarFill');
+        const loaderStatus = $('loaderStatus');
         const signupCard = $('signupCard');
         const successCard = $('successCard');
         const toast = $('toast');
@@ -576,7 +748,6 @@
         const googleBtn = $('googleBtn');
 
         const signupBonusDisplay = $('signupBonusDisplay');
-        // referralBonusDisplay is hidden, but we keep it for logic
         const totalBonusDisplay = $('totalBonusDisplay');
 
         const adminBanner = $('adminBanner');
@@ -596,16 +767,23 @@
         const shareLinkInput = $('shareLinkInput');
 
         // ================================================================
-        //  STATE
+        //  LOADING PROGRESS HELPER
         // ================================================================
-        let settings = { ...DEFAULTS };
-        let isSigningUp = false;
-        let toastTimer = null;
-        let referralCodeFromURL = null;
+        let progress = 0;
+
+        function updateProgress(value, status) {
+            progress = Math.min(value, 100);
+            progressBar.style.width = progress + '%';
+            if (status) {
+                loaderStatus.innerHTML = status;
+            }
+        }
 
         // ================================================================
         //  TOAST
         // ================================================================
+        let toastTimer = null;
+
         function showToast(msg, type = 'info', duration = 3500) {
             toast.textContent = msg;
             toast.className = 'toast';
@@ -618,43 +796,48 @@
         }
 
         // ================================================================
-        //  FETCH SETTINGS FROM FIREBASE – includes signupAppLink
+        //  STATE
+        // ================================================================
+        let settings = { ...DEFAULTS };
+        let isSigningUp = false;
+        let referralCodeFromURL = null;
+
+        // ================================================================
+        //  FETCH SETTINGS (ONLY WHAT'S NEEDED)
         // ================================================================
         function fetchSettings() {
+            updateProgress(25, '<i class="fas fa-circle" style="color:#38ef7d;font-size:8px;margin-right:4px;"></i> Loading settings…');
             return db.ref('settings').once('value')
                 .then(snap => {
                     const data = snap.val() || {};
                     settings = {
                         signupBonus: data.signupBonus ?? DEFAULTS.signupBonus,
                         referralBonus: data.referralBonus ?? DEFAULTS.referralBonus,
-                        signupAppLink: data.signupAppLink ?? DEFAULTS.signupAppLink,
                         bannerMessage: data.bannerMessage?.message ?? DEFAULTS.bannerMessage,
                         bannerEnabled: data.bannerMessage?.enabled ?? false,
                         downloadPageMessage: data.downloadPageMessage?.message ?? DEFAULTS
                             .downloadPageMessage,
                         downloadPageEnabled: data.downloadPageMessage?.enabled ?? false,
                     };
+                    updateProgress(50, '<i class="fas fa-circle" style="color:#38ef7d;font-size:8px;margin-right:4px;"></i> Settings loaded');
                     applySettings();
                 })
                 .catch(err => {
                     console.warn('Settings fetch failed, using defaults.', err);
+                    updateProgress(50, '<i class="fas fa-exclamation-triangle" style="color:#f9a825;margin-right:4px;"></i> Using default settings');
                     applySettings();
                 });
         }
 
         function applySettings() {
-            // Update bonus display – show only signup bonus
             signupBonusDisplay.textContent = settings.signupBonus;
-            // totalBonusDisplay shows only signup bonus (referral bonus is NOT shown)
             totalBonusDisplay.textContent = settings.signupBonus;
 
-            // Download link (top and success) – use signupAppLink
-            const link = settings.signupAppLink || '#';
-            topDownloadLink.href = link;
-            downloadBtn.href = link;
-            downloadBtn.classList.toggle('disabled', !link || link === '#');
+            // Hardcoded download link – admin cannot change
+            topDownloadLink.href = DOWNLOAD_APK_LINK;
+            downloadBtn.href = DOWNLOAD_APK_LINK;
+            downloadBtn.classList.remove('disabled');
 
-            // Banner
             if (settings.bannerEnabled && settings.bannerMessage) {
                 bannerMessage.textContent = settings.bannerMessage;
                 adminBanner.classList.add('show');
@@ -665,7 +848,6 @@
                 successAdminBanner.classList.remove('show');
             }
 
-            // Download page message (below download button)
             if (settings.downloadPageEnabled && settings.downloadPageMessage) {
                 downloadPageText.textContent = settings.downloadPageMessage;
                 downloadPageMessage.classList.add('show');
@@ -675,14 +857,13 @@
         }
 
         // ================================================================
-        //  GET REFERRAL CODE FROM URL (?ref=123456)
+        //  REFERRAL FROM URL
         // ================================================================
         function getReferralFromURL() {
             const params = new URLSearchParams(window.location.search);
             return params.get('ref') || params.get('referral') || params.get('referrer') || null;
         }
 
-        // Auto-populate referral input from URL – and lock it
         referralCodeFromURL = getReferralFromURL();
         if (referralCodeFromURL) {
             referralInput.value = referralCodeFromURL;
@@ -692,39 +873,34 @@
             referralInput.placeholder = 'Referral code locked';
         } else {
             referralInput.value = '';
-            referralInput.disabled = true; // always disabled – user cannot type
+            referralInput.disabled = true;
             referralInput.placeholder = 'No referral code';
         }
 
         // ================================================================
-        //  EXTRACT USERNAME FROM EMAIL (before @)
+        //  EXTRACT USERNAME
         // ================================================================
         function getUsernameFromEmail(email) {
             if (!email) return 'user';
             const atIndex = email.indexOf('@');
-            if (atIndex > 0) {
-                return email.substring(0, atIndex);
-            }
-            return email;
+            return atIndex > 0 ? email.substring(0, atIndex) : email;
         }
 
         // ================================================================
-        //  CREATE USER RECORD – new user gets ONLY signup bonus
+        //  CREATE USER – ONLY NEW USER DATA
         // ================================================================
         async function createUserRecord(user, referralCode) {
             const uid = user.uid;
             const email = user.email || '';
             const username = getUsernameFromEmail(email);
 
-            // 1) Check if this Google account is already registered
             const existing = await db.ref(`users/${uid}`).once('value');
             if (existing.exists()) {
                 throw new Error('This Google account is already registered. Please use a different account.');
             }
 
-            // 2) Validate referral code (if provided) – logic still works
             let referredBy = null;
-            let referralBonusEarned = 0; // this will be given to referrer, NOT to new user
+            let referralBonusEarned = 0;
 
             if (referralCode && referralCode.length === 6) {
                 const usersSnap = await db.ref('users')
@@ -734,7 +910,7 @@
                 const users = usersSnap.val() || {};
                 const entries = Object.entries(users);
                 if (entries.length > 0) {
-                    const [refUid, refData] = entries[0];
+                    const [refUid] = entries[0];
                     if (refUid !== uid) {
                         referredBy = refUid;
                         referralBonusEarned = settings.referralBonus;
@@ -742,7 +918,6 @@
                 }
             }
 
-            // 3) Generate a new 6‑digit referral code for this user
             let newRefCode = '';
             let attempts = 0;
             while (attempts < 20) {
@@ -760,13 +935,11 @@
             if (!newRefCode) newRefCode = String(Math.floor(100000 + Math.random() * 900000));
 
             const signupBonus = settings.signupBonus;
-            // NEW USER GETS ONLY SIGNUP BONUS – referral bonus goes to referrer only
-            const totalCoins = signupBonus; // referral bonus NOT added
+            const totalCoins = signupBonus;
 
-            // 4) Build user object – same fields as admin panel uses
             const userData = {
-                username: username,
-                email: email,
+                username,
+                email,
                 coins: totalCoins,
                 totalEarned: totalCoins,
                 todayEarned: totalCoins,
@@ -774,9 +947,9 @@
                 approvedEarnings: 0,
                 referrals: [],
                 totalReferrals: 0,
-                referralEarnings: 0, // new user has no referral earnings yet
+                referralEarnings: 0,
                 referralCode: newRefCode,
-                referredBy: referredBy,
+                referredBy,
                 suspended: false,
                 spinsToday: 0,
                 lastSpinDate: new Date().toISOString().slice(0, 10),
@@ -800,10 +973,8 @@
                 }
             };
 
-            // 5) Save user
             await db.ref(`users/${uid}`).set(userData);
 
-            // 6) If referred, update referrer's data (give referral bonus to referrer)
             if (referredBy) {
                 const refSnap = await db.ref(`users/${referredBy}`).once('value');
                 const referrerData = refSnap.val() || {};
@@ -819,9 +990,8 @@
                     referralBonusEarned;
                 await db.ref().update(refUpdates);
 
-                // Log referral (same as admin panel)
                 await db.ref('referrals').push({
-                    referredBy: referredBy,
+                    referredBy,
                     referredUserId: uid,
                     referredUsername: username,
                     timestamp: Date.now(),
@@ -829,10 +999,9 @@
                 });
             }
 
-            // 7) Store session in localStorage
             const session = {
                 uid,
-                username: username,
+                username,
                 email,
                 coins: totalCoins,
                 referralCode: newRefCode,
@@ -843,47 +1012,29 @@
             };
             localStorage.setItem('taskExpertUser', JSON.stringify(session));
 
-            return {
-                userData,
-                totalCoins,
-                signupBonus,
-                referralBonusEarned, // this is for display (but we won't show it to new user)
-                referredBy,
-                newRefCode,
-                username
-            };
+            return { totalCoins, signupBonus, referralBonusEarned, newRefCode, username };
         }
 
         // ================================================================
-        //  GOOGLE SIGN-UP – main flow
+        //  GOOGLE SIGN-UP
         // ================================================================
         async function handleGoogleSignUp() {
             if (isSigningUp) return;
-
-            // Get referral code from the (locked) input field
             const referralCode = referralInput.value.trim().replace(/\s/g, '');
 
             isSigningUp = true;
             googleBtn.disabled = true;
-            googleBtn.innerHTML = `<span class="loader"></span> Signing up…`;
+            googleBtn.innerHTML = `<span class="loader-dots-small"></span> Signing up…`;
 
             try {
-                // Launch Google popup
                 const provider = new firebase.auth.GoogleAuthProvider();
                 provider.setCustomParameters({ prompt: 'select_account' });
                 const result = await auth.signInWithPopup(provider);
                 const user = result.user;
 
-                // Create user record in Firebase (username auto-generated from email)
-                const {
-                    totalCoins,
-                    signupBonus: sBonus,
-                    referralBonusEarned: rBonus,
-                    newRefCode,
-                    username
-                } = await createUserRecord(user, referralCode);
+                const { totalCoins, signupBonus: sBonus, newRefCode, username } = await createUserRecord(
+                    user, referralCode);
 
-                // Show success UI – pass 0 for referral bonus because new user doesn't get it
                 showSuccess(totalCoins, sBonus, 0, false, newRefCode, username);
                 showToast('✅ Account created successfully!', 'success', 3000);
 
@@ -906,23 +1057,22 @@
         }
 
         // ================================================================
-        //  SHOW SUCCESS CARD – referral bonus is 0 for new user
+        //  SHOW SUCCESS
         // ================================================================
         function showSuccess(total, signup, referral, duplicateMatch, refCode, username) {
             signupCard.classList.add('hidden');
             successCard.classList.remove('hidden');
+            successCard.classList.add('visible');
 
             breakSignup.textContent = `+${signup}`;
-            breakReferral.textContent = `+0`; // referral bonus is 0 for new user
+            breakReferral.textContent = `+0`;
             breakTotal.textContent = total;
 
             altWarning.classList.toggle('show', !!duplicateMatch);
 
-            // Build share link with the user's referral code
             const baseUrl = window.location.origin + window.location.pathname;
             shareLinkInput.value = refCode ? `${baseUrl}?ref=${encodeURIComponent(refCode)}` : baseUrl;
 
-            // Update success subtitle to show username
             const subEl = document.querySelector('.success-sub');
             if (subEl && username) {
                 subEl.textContent = `Welcome, ${username}! Your Task Expert account is ready.`;
@@ -951,11 +1101,15 @@
         window.copyShareLink = copyShareLink;
 
         // ================================================================
-        //  CHECK EXISTING SESSION (user already signed up)
+        //  CHECK EXISTING SESSION
         // ================================================================
         function checkExistingSession() {
+            updateProgress(70, '<i class="fas fa-circle" style="color:#38ef7d;font-size:8px;margin-right:4px;"></i> Checking for existing account…');
             const session = localStorage.getItem('taskExpertUser');
-            if (!session) return false;
+            if (!session) {
+                updateProgress(85, '<i class="fas fa-circle" style="color:#38ef7d;font-size:8px;margin-right:4px;"></i> No existing session found');
+                return false;
+            }
             try {
                 const data = JSON.parse(session);
                 if (!data.uid) return false;
@@ -963,29 +1117,40 @@
                     .then(snap => {
                         if (!snap.exists()) {
                             localStorage.removeItem('taskExpertUser');
+                            updateProgress(85,
+                                '<i class="fas fa-circle" style="color:#38ef7d;font-size:8px;margin-right:4px;"></i> No existing session found'
+                                );
                             return false;
                         }
                         const userData = snap.val();
                         const refCode = userData.referralCode || data.referralCode || '';
-                        // referral earnings of new user should be 0 (they don't get referral bonus)
+                        updateProgress(95,
+                            '<i class="fas fa-check-circle" style="color:#38ef7d;margin-right:4px;"></i> Welcome back!'
+                            );
                         showSuccess(
                             userData.coins || 0,
                             settings.signupBonus,
-                            0, // new user gets no referral bonus
+                            0,
                             userData.alt_account || false,
                             refCode,
                             userData.username || data.username || 'User'
                         );
                         return true;
                     })
-                    .catch(() => false);
+                    .catch(() => {
+                        updateProgress(85,
+                            '<i class="fas fa-exclamation-triangle" style="color:#f9a825;margin-right:4px;"></i> Could not verify session'
+                            );
+                        return false;
+                    });
             } catch {
+                updateProgress(85, '<i class="fas fa-circle" style="color:#38ef7d;font-size:8px;margin-right:4px;"></i> No existing session');
                 return false;
             }
         }
 
         // ================================================================
-        //  AUTH STATE – prevent auto‑sign‑in from interfering
+        //  AUTH STATE
         // ================================================================
         auth.onAuthStateChanged(async (user) => {
             if (user) {
@@ -993,10 +1158,9 @@
                 if (session) {
                     try {
                         const data = JSON.parse(session);
-                        if (data.uid === user.uid) return; // already handled
+                        if (data.uid === user.uid) return;
                     } catch (e) {}
                 }
-                // If user is signed in but we don't have a session, sign them out
                 await auth.signOut();
                 showToast('Please sign up with a new Google account.', 'warning', 3000);
             }
@@ -1006,32 +1170,45 @@
         //  INIT
         // ================================================================
         async function init() {
+            // Step 1: Connect
+            updateProgress(10, '<i class="fas fa-circle" style="color:#38ef7d;font-size:8px;margin-right:4px;"></i> Connecting…');
+            await new Promise(r => setTimeout(r, 400));
+
+            // Step 2: Fetch settings
             await fetchSettings();
 
+            // Step 3: Check session
             const hasSession = await checkExistingSession();
-            if (hasSession) {
-                // Already showing success card
-                return;
+
+            // Step 4: Show appropriate card
+            if (!hasSession) {
+                signupCard.classList.remove('hidden');
+                signupCard.classList.add('visible');
+                successCard.classList.add('hidden');
+                updateProgress(100, '<i class="fas fa-check-circle" style="color:#38ef7d;margin-right:4px;"></i> Ready!');
+            } else {
+                updateProgress(100, '<i class="fas fa-check-circle" style="color:#38ef7d;margin-right:4px;"></i> Welcome back!');
             }
 
-            signupCard.classList.remove('hidden');
-            successCard.classList.add('hidden');
+            // Step 5: Hide loading overlay smoothly
+            setTimeout(() => {
+                loadingOverlay.classList.add('hidden');
+            }, 500);
 
-            // Google button click
             googleBtn.addEventListener('click', handleGoogleSignUp);
-
-            // Refresh settings every 5 minutes (like admin panel)
             setInterval(fetchSettings, 300000);
 
-            console.log('✅ Task Expert Sign-Up Panel ready.');
-            console.log('🔗 Referral code from URL:', referralCodeFromURL || 'none');
-            console.log('📡 Connected to Firebase:', firebaseConfig.databaseURL);
-            console.log('👤 Username will be auto-generated from Gmail address.');
-            console.log('🔒 Referral field is locked – user cannot edit.');
-            console.log('📌 New user receives ONLY signup bonus – referral bonus goes to referrer.');
+            console.log('✅ Task Expert ready.');
+            console.log('📡 Only essential data loaded from Firebase.');
         }
 
-        init().catch(console.error);
+        init().catch(err => {
+            console.error('Init error:', err);
+            signupCard.classList.remove('hidden');
+            signupCard.classList.add('visible');
+            loadingOverlay.classList.add('hidden');
+            showToast('⚠️ Failed to load settings. Using defaults.', 'warning', 4000);
+        });
     </script>
 </body>
 </html>
