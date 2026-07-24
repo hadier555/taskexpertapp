@@ -1,209 +1,830 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    
-    <!-- 👇 HilltopAds Verification Meta Tag (آپ کی سائٹ کے لیے) -->
-    <meta name="8dc20e3fa83491dd7f190cf86d0bd3d3e5668486" content="8dc20e3fa83491dd7f190cf86d0bd3d3e5668486" />
-    
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
     <meta name="clckd" content="c124c5939d8a569ff3823b803fba763f" />
-    <title>🎬 Video Ad Player</title>
+
+    <!-- ===== HilltopAds Site Verification Meta Tag ===== -->
+    <meta name="8dc20e3fa83491dd7f190cf86d0bd3d3e5668486" content="8dc20e3fa83491dd7f190cf86d0bd3d3e5668486" />
+
+    <title>🎬 VAST Ad Player · HilltopAds</title>
     <style>
-        /* سٹائل ویسے ہی ہیں جیسے پہلے تھے – میں نے مختصر کر دیا ہے */
-        * { margin:0; padding:0; box-sizing:border-box; }
-        body, html { width:100%; height:100%; background:#0a0a0f; font-family:'Segoe UI', sans-serif; overflow:hidden; user-select:none; }
-        #main { display:flex; flex-direction:column; width:100vw; height:100vh; background:#0a0a0f; }
-        #ad-container { flex:1; position:relative; background:#000; display:flex; align-items:center; justify-content:center; }
-        #ad-container video { width:100%; height:100%; object-fit:contain; background:#000; }
-        #play-btn { position:absolute; padding:20px 56px; font-size:28px; font-weight:700; background:linear-gradient(135deg,#f43f5e,#ec4899); color:#fff; border:none; border-radius:60px; cursor:pointer; box-shadow:0 0 40px rgba(236,72,153,0.5); z-index:20; transition:all 0.3s; text-transform:uppercase; }
-        #play-btn:hover { transform:scale(1.05); }
-        #loading { position:absolute; inset:0; display:none; flex-direction:column; align-items:center; justify-content:center; background:rgba(0,0,0,0.85); z-index:10; color:#fff; gap:16px; }
-        #loading .spinner { width:48px; height:48px; border:4px solid rgba(255,255,255,0.15); border-top-color:#ec4899; border-radius:50%; animation:spin 0.9s linear infinite; }
-        @keyframes spin { to { transform:rotate(360deg); } }
-        #error-msg { position:absolute; bottom:120px; left:50%; transform:translateX(-50%); color:#fbbf24; background:rgba(0,0,0,0.85); padding:14px 28px; border-radius:12px; font-size:15px; display:none; z-index:30; border:1px solid rgba(251,191,36,0.3); text-align:center; max-width:90%; backdrop-filter:blur(4px); }
-        #retry-btn { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); padding:16px 44px; font-size:20px; font-weight:700; background:linear-gradient(135deg,#f43f5e,#ec4899); color:#fff; border:none; border-radius:50px; cursor:pointer; display:none; z-index:25; box-shadow:0 0 30px rgba(236,72,153,0.5); }
-        .top-controls { position:absolute; top:24px; right:24px; display:none; align-items:center; gap:16px; background:rgba(0,0,0,0.7); padding:12px 20px; border-radius:50px; z-index:15; backdrop-filter:blur(8px); border:1px solid rgba(255,255,255,0.1); }
-        .top-controls .ad-countdown { color:#e2e8f0; font-weight:500; font-size:16px; min-width:70px; text-align:center; }
-        .top-controls .ad-skip-btn { padding:8px 24px; border-radius:40px; border:1px solid rgba(255,255,255,0.25); background:rgba(255,255,255,0.08); color:#f1f5f9; cursor:pointer; font-weight:600; font-size:16px; transition:all 0.2s; }
-        .top-controls .ad-skip-btn:disabled { opacity:0.35; cursor:not-allowed; }
-        .top-controls .sound-btn { padding:8px 12px; border-radius:40px; border:1px solid rgba(255,255,255,0.2); background:rgba(255,255,255,0.08); color:#f1f5f9; cursor:pointer; font-size:20px; min-width:44px; text-align:center; }
-        .top-controls .btn-download-small { padding:8px 20px; border-radius:40px; border:none; background:linear-gradient(135deg,#22c55e,#16a34a); color:#fff; font-weight:700; font-size:15px; cursor:pointer; text-decoration:none; display:inline-flex; align-items:center; gap:6px; transition:all 0.2s; box-shadow:0 2px 12px rgba(34,197,94,0.3); }
-        #bottom-bar { height:84px; min-height:84px; background:#111118; border-top:1px solid rgba(255,255,255,0.06); display:flex; align-items:center; justify-content:center; padding:0 20px; }
-        .btn-download-big { padding:14px 48px; border-radius:50px; border:none; font-size:18px; font-weight:700; cursor:pointer; text-decoration:none; display:none; align-items:center; gap:10px; background:linear-gradient(135deg,#22c55e,#16a34a); color:#fff; box-shadow:0 6px 24px rgba(34,197,94,0.35); transition:all 0.25s; }
-        #tracking-badge { position:absolute; bottom:80px; left:20px; color:#22c55e; font-size:13px; font-weight:600; background:rgba(0,0,0,0.75); padding:5px 14px; border-radius:30px; z-index:15; display:none; backdrop-filter:blur(4px); border:1px solid rgba(34,197,94,0.3); align-items:center; gap:6px; }
-        #tracking-badge .dot { display:inline-block; width:8px; height:8px; background:#22c55e; border-radius:50%; animation:pulse-dot 1.5s ease-in-out infinite; }
-        @keyframes pulse-dot { 0%,100%{opacity:1;transform:scale(1);} 50%{opacity:0.3;transform:scale(0.7);} }
-        #cache-badge { position:absolute; top:24px; left:24px; color:#60a5fa; font-size:12px; font-weight:600; background:rgba(0,0,0,0.75); padding:4px 14px; border-radius:30px; z-index:15; display:none; backdrop-filter:blur(4px); border:1px solid rgba(96,165,250,0.3); align-items:center; gap:6px; }
-        @media (max-width:600px) { #play-btn { padding:16px 36px; font-size:22px; } .btn-download-big { padding:12px 32px; font-size:16px; } #bottom-bar { height:74px; min-height:74px; } .top-controls { top:16px; right:16px; padding:10px 16px; gap:12px; } }
+        /* ─── Reset & Base ─── */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body,
+        html {
+            width: 100%;
+            height: 100%;
+            background: #0a0a0f;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        #main {
+            display: flex;
+            flex-direction: column;
+            width: 100vw;
+            height: 100vh;
+            background: #0a0a0f;
+        }
+
+        /* ─── Ad Container ─── */
+        #ad-container {
+            flex: 1;
+            position: relative;
+            background: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #ad-container video {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            background: #000;
+        }
+
+        /* ─── Play Button ─── */
+        #play-btn {
+            position: absolute;
+            padding: 20px 56px;
+            font-size: 28px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            background: linear-gradient(135deg, #f43f5e, #ec4899);
+            color: #fff;
+            border: none;
+            border-radius: 60px;
+            cursor: pointer;
+            box-shadow: 0 0 40px rgba(236, 72, 153, 0.5);
+            z-index: 20;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+        }
+        #play-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 60px rgba(236, 72, 153, 0.7);
+        }
+        #play-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* ─── Loading ─── */
+        #loading {
+            position: absolute;
+            inset: 0;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 10;
+            color: #fff;
+            gap: 16px;
+        }
+        #loading .spinner {
+            width: 48px;
+            height: 48px;
+            border: 4px solid rgba(255, 255, 255, 0.15);
+            border-top-color: #ec4899;
+            border-radius: 50%;
+            animation: spin 0.9s linear infinite;
+        }
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+        #loading span {
+            font-size: 16px;
+            font-weight: 300;
+            color: #94a3b8;
+        }
+
+        /* ─── Error ─── */
+        #error-msg {
+            position: absolute;
+            bottom: 120px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #fbbf24;
+            background: rgba(0, 0, 0, 0.85);
+            padding: 14px 28px;
+            border-radius: 12px;
+            font-size: 15px;
+            display: none;
+            z-index: 30;
+            border: 1px solid rgba(251, 191, 36, 0.3);
+            text-align: center;
+            max-width: 90%;
+            backdrop-filter: blur(4px);
+        }
+        #retry-btn {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 16px 44px;
+            font-size: 20px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #f43f5e, #ec4899);
+            color: #fff;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            display: none;
+            z-index: 25;
+            box-shadow: 0 0 30px rgba(236, 72, 153, 0.5);
+            transition: 0.3s;
+        }
+        #retry-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 50px rgba(236, 72, 153, 0.7);
+        }
+
+        /* ─── Top Controls ─── */
+        .top-controls {
+            position: absolute;
+            top: 24px;
+            right: 24px;
+            display: none;
+            align-items: center;
+            gap: 16px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 12px 20px;
+            border-radius: 50px;
+            z-index: 15;
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            pointer-events: none;
+        }
+        .top-controls * {
+            pointer-events: auto;
+        }
+        .top-controls .ad-countdown {
+            color: #e2e8f0;
+            font-weight: 500;
+            font-size: 16px;
+            min-width: 70px;
+            text-align: center;
+        }
+        .top-controls .ad-skip-btn {
+            padding: 8px 24px;
+            border-radius: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            background: rgba(255, 255, 255, 0.08);
+            color: #f1f5f9;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 16px;
+            transition: all 0.2s;
+            letter-spacing: 0.3px;
+        }
+        .top-controls .ad-skip-btn:disabled {
+            opacity: 0.35;
+            cursor: not-allowed;
+        }
+        .top-controls .ad-skip-btn:hover:not(:disabled) {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: #fff;
+            transform: scale(1.02);
+        }
+        .top-controls .sound-btn {
+            padding: 8px 12px;
+            border-radius: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.08);
+            color: #f1f5f9;
+            cursor: pointer;
+            font-size: 20px;
+            transition: all 0.2s;
+            min-width: 44px;
+            text-align: center;
+            line-height: 1;
+        }
+        .top-controls .sound-btn:hover {
+            background: rgba(255, 255, 255, 0.18);
+            border-color: rgba(255, 255, 255, 0.4);
+            transform: scale(1.05);
+        }
+        .top-controls .btn-download-small {
+            padding: 8px 20px;
+            border-radius: 40px;
+            border: none;
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            color: #fff;
+            font-weight: 700;
+            font-size: 15px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+            box-shadow: 0 2px 12px rgba(34, 197, 94, 0.3);
+        }
+        .top-controls .btn-download-small:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 18px rgba(34, 197, 94, 0.4);
+        }
+
+        /* ─── Bottom Bar ─── */
+        #bottom-bar {
+            height: 84px;
+            min-height: 84px;
+            background: #111118;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 20px;
+        }
+        .btn-download-big {
+            padding: 14px 48px;
+            border-radius: 50px;
+            border: none;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            text-decoration: none;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            color: #fff;
+            box-shadow: 0 6px 24px rgba(34, 197, 94, 0.35);
+            transition: all 0.25s ease;
+            letter-spacing: 0.5px;
+        }
+        .btn-download-big:hover {
+            transform: scale(1.04);
+            box-shadow: 0 8px 32px rgba(34, 197, 94, 0.5);
+            background: linear-gradient(135deg, #2dd55e, #15803d);
+        }
+        .btn-download-big:active {
+            transform: scale(0.95);
+        }
+
+        /* ─── Badges ─── */
+        #tracking-badge {
+            position: absolute;
+            bottom: 80px;
+            left: 20px;
+            color: #22c55e;
+            font-size: 13px;
+            font-weight: 600;
+            background: rgba(0, 0, 0, 0.75);
+            padding: 5px 14px;
+            border-radius: 30px;
+            z-index: 15;
+            display: none;
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            align-items: center;
+            gap: 6px;
+        }
+        #tracking-badge .dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: #22c55e;
+            border-radius: 50%;
+            animation: pulse-dot 1.5s ease-in-out infinite;
+        }
+        @keyframes pulse-dot {
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 0.3;
+                transform: scale(0.7);
+            }
+        }
+
+        #cache-badge {
+            position: absolute;
+            top: 24px;
+            left: 24px;
+            color: #60a5fa;
+            font-size: 12px;
+            font-weight: 600;
+            background: rgba(0, 0, 0, 0.75);
+            padding: 4px 14px;
+            border-radius: 30px;
+            z-index: 15;
+            display: none;
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(96, 165, 250, 0.3);
+            align-items: center;
+            gap: 6px;
+        }
+        #cache-badge .icon {
+            font-size: 14px;
+        }
+
+        /* ─── Responsive ─── */
+        @media (max-width: 600px) {
+            #play-btn {
+                padding: 16px 36px;
+                font-size: 22px;
+            }
+            .btn-download-big {
+                padding: 12px 32px;
+                font-size: 16px;
+            }
+            #bottom-bar {
+                height: 74px;
+                min-height: 74px;
+            }
+            .top-controls {
+                top: 16px;
+                right: 16px;
+                padding: 10px 16px;
+                gap: 12px;
+            }
+            .top-controls .ad-countdown {
+                font-size: 14px;
+                min-width: 60px;
+            }
+            .top-controls .ad-skip-btn {
+                font-size: 14px;
+                padding: 6px 18px;
+            }
+            .top-controls .btn-download-small {
+                font-size: 13px;
+                padding: 6px 14px;
+            }
+            .top-controls .sound-btn {
+                font-size: 17px;
+                padding: 6px 10px;
+                min-width: 36px;
+            }
+            #error-msg {
+                font-size: 13px;
+                padding: 10px 18px;
+                bottom: 100px;
+            }
+            #retry-btn {
+                padding: 12px 32px;
+                font-size: 17px;
+            }
+            #tracking-badge {
+                bottom: 70px;
+                left: 12px;
+                font-size: 11px;
+                padding: 4px 12px;
+            }
+            #cache-badge {
+                top: 16px;
+                left: 16px;
+                font-size: 11px;
+                padding: 3px 12px;
+            }
+        }
+
+        /* ─── HilltopAds Branding (optional) ─── */
+        #ht-brand {
+            position: absolute;
+            bottom: 130px;
+            right: 20px;
+            color: rgba(255, 255, 255, 0.25);
+            font-size: 11px;
+            font-weight: 400;
+            letter-spacing: 0.5px;
+            z-index: 5;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 4px 14px;
+            border-radius: 20px;
+            backdrop-filter: blur(2px);
+            pointer-events: none;
+        }
+        #ht-brand span {
+            color: #ec4899;
+            font-weight: 600;
+        }
     </style>
 </head>
 <body>
-<div id="main">
-    <div id="ad-container">
-        <video id="ad-video" playsinline></video>
-        <div id="loading"><div class="spinner"></div><span>Loading ad...</span></div>
-        <button id="play-btn">▶ Play Ad</button>
-        <button id="retry-btn">🔄 Retry</button>
-        <div id="error-msg"></div>
 
-        <div class="top-controls" id="top-controls">
-            <span class="ad-countdown" id="ad-countdown">Ad · 0s</span>
-            <button class="ad-skip-btn" id="ad-skip-btn" disabled>Skip ⏳</button>
-            <button class="sound-btn" id="sound-btn">🔊</button>
-            <a href="#" id="download-small" class="btn-download-small" target="_blank">⬇️ Download</a>
+    <div id="main">
+        <!-- Ad Container -->
+        <div id="ad-container">
+            <video id="ad-video" playsinline></video>
+
+            <div id="loading">
+                <div class="spinner"></div>
+                <span>Loading ad…</span>
+            </div>
+
+            <button id="play-btn">▶ Play Ad</button>
+            <button id="retry-btn">🔄 Retry</button>
+            <div id="error-msg"></div>
+
+            <!-- Top Controls -->
+            <div class="top-controls" id="top-controls">
+                <span class="ad-countdown" id="ad-countdown">Ad · 0s</span>
+                <button class="ad-skip-btn" id="ad-skip-btn" disabled>Skip ⏳</button>
+                <button class="sound-btn" id="sound-btn">🔊</button>
+                <a href="#" id="download-small" class="btn-download-small" target="_blank">⬇️ Download</a>
+            </div>
+
+            <!-- Badges -->
+            <div id="tracking-badge">
+                <span class="dot"></span> Tracking Active
+            </div>
+            <div id="cache-badge">
+                <span class="icon">💾</span> Cached
+            </div>
+
+            <!-- HilltopAds Brand -->
+            <div id="ht-brand">▲ <span>HilltopAds</span> · VAST</div>
         </div>
 
-        <div id="tracking-badge"><span class="dot"></span> Tracking Active</div>
-        <div id="cache-badge"><span class="icon">💾</span> Cached</div>
+        <!-- Bottom Bar -->
+        <div id="bottom-bar">
+            <a href="#" id="download-big" class="btn-download-big" target="_blank">⬇️ Download</a>
+        </div>
     </div>
 
-    <div id="bottom-bar">
-        <a href="#" id="download-big" class="btn-download-big" target="_blank">⬇️ Download</a>
-    </div>
-</div>
+    <script>
+        (function() {
+            'use strict';
 
-<script>
-    (function() {
-        // ===== 🔥 اپنی ویڈیو کا لنک یہاں ڈالیں (VAST ہٹا دیا گیا ہے) =====
-        const DIRECT_VIDEO_URL = 'https://www.w3schools.com/html/mov_bbb.mp4';  // مثال کے طور پر
-        const DEFAULT_CTA = 'https://google.com';
-        const SKIP_DELAY = 15;
+            // ============================================================
+            //  🔥  HILLTOPADS VAST TAG  (replaced with your new URL)
+            // ============================================================
+            const VAST_URL =
+                'https://difficultblock.com/d-m.FIzPd/GyNGvwZQGpUM/WeYm/9ruaZKU/lskAPcTaclynNtTUMLyoNiTDcytCNGzRIz1YM/ziIO2/MQQM';
 
-        const video = document.getElementById('ad-video');
-        const main = document.getElementById('main');
-        const playBtn = document.getElementById('play-btn');
-        const retryBtn = document.getElementById('retry-btn');
-        const errorMsg = document.getElementById('error-msg');
-        const loading = document.getElementById('loading');
-        const topControls = document.getElementById('top-controls');
-        const countdown = document.getElementById('ad-countdown');
-        const skipBtn = document.getElementById('ad-skip-btn');
-        const soundBtn = document.getElementById('sound-btn');
-        const downloadSmall = document.getElementById('download-small');
-        const downloadBig = document.getElementById('download-big');
-        const trackingBadge = document.getElementById('tracking-badge');
-        const cacheBadge = document.getElementById('cache-badge');
+            const DEFAULT_CTA = 'https://google.com';
+            const SKIP_DELAY = 15; // seconds
 
-        let isAdPlaying = false;
-        let skipInterval = null;
-        let isMuted = false;
+            // ============================================================
+            //  DOM refs
+            // ============================================================
+            const video = document.getElementById('ad-video');
+            const main = document.getElementById('main');
+            const playBtn = document.getElementById('play-btn');
+            const retryBtn = document.getElementById('retry-btn');
+            const errorMsg = document.getElementById('error-msg');
+            const loading = document.getElementById('loading');
+            const topControls = document.getElementById('top-controls');
+            const countdown = document.getElementById('ad-countdown');
+            const skipBtn = document.getElementById('ad-skip-btn');
+            const soundBtn = document.getElementById('sound-btn');
+            const downloadSmall = document.getElementById('download-small');
+            const downloadBig = document.getElementById('download-big');
+            const trackingBadge = document.getElementById('tracking-badge');
+            const cacheBadge = document.getElementById('cache-badge');
 
-        video.muted = false;
-        soundBtn.textContent = '🔊';
+            // ============================================================
+            //  State
+            // ============================================================
+            let isAdPlaying = false;
+            let skipInterval = null;
+            let currentClickUrl = '';
+            let isMuted = false;
+            let impressionUrls = [];
+            let impressionsFired = false;
 
-        function showError(msg, showRetry = false) {
-            errorMsg.style.display = 'block';
-            errorMsg.textContent = '⚠️ ' + msg;
-            retryBtn.style.display = showRetry ? 'block' : 'none';
-        }
-        function hideError() { errorMsg.style.display = 'none'; retryBtn.style.display = 'none'; }
-        function showLoading(show) { loading.style.display = show ? 'flex' : 'none'; }
-        function showControls(show) { topControls.style.display = show ? 'flex' : 'none'; }
-
-        function toggleSound() { video.muted = !video.muted; isMuted = video.muted; soundBtn.textContent = isMuted ? '🔇' : '🔊'; }
-        soundBtn.addEventListener('click', toggleSound);
-
-        function resetPlayer() {
-            isAdPlaying = false;
-            clearInterval(skipInterval);
-            video.pause();
-            video.removeAttribute('src');
-            video.load();
-            showControls(false);
-            skipBtn.disabled = true;
-            skipBtn.textContent = 'Skip ⏳';
-            countdown.textContent = 'Ad · 0s';
-            playBtn.style.display = 'block';
-            playBtn.textContent = '▶ Play Ad';
-            hideError();
-            showLoading(false);
-            downloadSmall.style.display = 'none';
-            downloadBig.style.display = 'none';
-            trackingBadge.style.display = 'none';
-            cacheBadge.style.display = 'none';
+            // Audio ON by default
             video.muted = false;
-            isMuted = false;
-            soundBtn.textContent = '🔊';
-        }
-
-        function startSkipTimer() {
-            let rem = SKIP_DELAY;
-            skipBtn.disabled = true;
-            skipBtn.textContent = `Skip ⏳ ${rem}s`;
-            countdown.textContent = `Ad · ${rem}s`;
-            skipInterval = setInterval(() => {
-                rem--;
-                if (rem <= 0) {
-                    clearInterval(skipInterval);
-                    skipBtn.disabled = false;
-                    skipBtn.textContent = 'Skip ▶';
-                    countdown.textContent = 'Skip now';
-                } else {
-                    skipBtn.textContent = `Skip ⏳ ${rem}s`;
-                    countdown.textContent = `Ad · ${rem}s`;
-                }
-            }, 1000);
-        }
-
-        function finishAd() {
-            clearInterval(skipInterval);
-            resetPlayer();
-            playBtn.style.display = 'block';
-            playBtn.textContent = '▶ Play Again';
-        }
-
-        skipBtn.addEventListener('click', () => { if (!skipBtn.disabled) finishAd(); });
-
-        // 🚀 براہ راست ویڈیو چلائیں
-        function playDirectVideo() {
-            resetPlayer();
-            hideError();
-            showLoading(true);
-            playBtn.style.display = 'none';
-
-            video.src = DIRECT_VIDEO_URL;
-            video.load();
-            video.muted = false;
-            isMuted = false;
             soundBtn.textContent = '🔊';
 
-            const playPromise = video.play();
-            if (playPromise !== undefined) {
-                playPromise.then(() => {
-                    console.log('✅ Video playing');
-                    isAdPlaying = true;
-                    showControls(true);
-                    startSkipTimer();
-                    trackingBadge.style.display = 'flex';
-                    downloadSmall.href = DEFAULT_CTA;
-                    downloadSmall.style.display = 'inline-flex';
-                    downloadBig.href = DEFAULT_CTA;
-                    downloadBig.style.display = 'inline-flex';
-                    main.requestFullscreen().catch(() => {});
-                }).catch(err => {
-                    console.error('❌ Play error:', err);
-                    showError('Tap to play', true);
-                    showLoading(false);
-                    playBtn.style.display = 'block';
-                    playBtn.textContent = '▶ Tap to Play';
+            // ============================================================
+            //  UI Helpers
+            // ============================================================
+            function showError(msg, showRetry) {
+                errorMsg.style.display = 'block';
+                errorMsg.textContent = '⚠️ ' + msg;
+                retryBtn.style.display = showRetry ? 'block' : 'none';
+            }
+
+            function hideError() {
+                errorMsg.style.display = 'none';
+                retryBtn.style.display = 'none';
+            }
+
+            function showLoading(show) {
+                loading.style.display = show ? 'flex' : 'none';
+            }
+
+            function showControls(show) {
+                topControls.style.display = show ? 'flex' : 'none';
+            }
+
+            function toggleSound() {
+                video.muted = !video.muted;
+                isMuted = video.muted;
+                soundBtn.textContent = isMuted ? '🔇' : '🔊';
+            }
+            soundBtn.addEventListener('click', toggleSound);
+
+            // ============================================================
+            //  Impression Firing
+            // ============================================================
+            function fireImpressions() {
+                if (impressionsFired) return;
+                impressionsFired = true;
+                console.log('🔥 Firing impressions:', impressionUrls);
+                trackingBadge.style.display = 'flex';
+                impressionUrls.forEach(function(url) {
+                    if (url) {
+                        new Image().src = url;
+                        fetch(url, { mode: 'no-cors' }).catch(function() {});
+                    }
                 });
             }
 
-            video.onended = finishAd;
-            video.onerror = function() {
-                showError('Video error. Retry?', true);
-                showLoading(false);
+            // ============================================================
+            //  Reset
+            // ============================================================
+            function resetPlayer() {
+                isAdPlaying = false;
+                impressionsFired = false;
+                impressionUrls = [];
+                clearInterval(skipInterval);
+                video.pause();
+                video.removeAttribute('src');
+                video.load();
+                showControls(false);
+                skipBtn.disabled = true;
+                skipBtn.textContent = 'Skip ⏳';
+                countdown.textContent = 'Ad · 0s';
                 playBtn.style.display = 'block';
-            };
-        }
+                playBtn.textContent = '▶ Play Ad';
+                hideError();
+                showLoading(false);
+                downloadSmall.style.display = 'none';
+                downloadBig.style.display = 'none';
+                trackingBadge.style.display = 'none';
+                cacheBadge.style.display = 'none';
+                video.muted = false;
+                isMuted = false;
+                soundBtn.textContent = '🔊';
+                video.onplay = null;
+                video.onerror = null;
+            }
 
-        playBtn.addEventListener('click', playDirectVideo);
-        retryBtn.addEventListener('click', playDirectVideo);
+            // ============================================================
+            //  Load Video (cache-first)
+            // ============================================================
+            function loadVideo(videoUrl) {
+                return new Promise(function(resolve) {
+                    fetch(videoUrl, { cache: 'force-cache', mode: 'cors' })
+                        .then(function(response) {
+                            if (response.ok) {
+                                return response.blob().then(function(blob) {
+                                    var blobUrl = URL.createObjectURL(blob);
+                                    video.src = blobUrl;
+                                    cacheBadge.style.display = 'flex';
+                                    console.log('✅ Video loaded from CACHE');
+                                    resolve();
+                                });
+                            } else {
+                                video.src = videoUrl;
+                                console.log('⚠️ Fetch not ok, using direct src');
+                                resolve();
+                            }
+                        })
+                        .catch(function() {
+                            video.src = videoUrl;
+                            console.log('⚠️ Fetch error, using direct src');
+                            resolve();
+                        });
 
-        resetPlayer();
-        console.log('✅ براہ راست ویڈیو پلیئر تیار ہے (VAST ہٹا دیا گیا)');
-    })();
-</script>
+                    // fallback: if 10s and still no src, force it
+                    setTimeout(function() {
+                        if (!video.src) {
+                            video.src = videoUrl;
+                            console.log('⏰ Timeout, using direct src');
+                            resolve();
+                        }
+                    }, 10000);
+                });
+            }
+
+            // ============================================================
+            //  Parse VAST & Play
+            // ============================================================
+            function parseVASTAndPlay(xmlString) {
+                try {
+                    var parser = new DOMParser();
+                    var xml = parser.parseFromString(xmlString, 'text/xml');
+
+                    if (xml.querySelector('parsererror')) {
+                        showError('Invalid VAST XML', true);
+                        showLoading(false);
+                        playBtn.style.display = 'block';
+                        return;
+                    }
+
+                    // 1. Video URL
+                    var mediaFiles = xml.querySelectorAll('MediaFile');
+                    var videoUrl = null;
+                    for (var i = 0; i < mediaFiles.length; i++) {
+                        var node = mediaFiles[i];
+                        var type = node.getAttribute('type') || '';
+                        var url = node.textContent.trim();
+                        if (!url) url = node.getAttribute('src') || node.getAttribute('url') || '';
+                        if (url && (type.includes('mp4') || type.includes('video/mp4'))) {
+                            videoUrl = url;
+                            break;
+                        }
+                    }
+                    if (!videoUrl) {
+                        for (var j = 0; j < mediaFiles.length; j++) {
+                            var n2 = mediaFiles[j];
+                            var u = n2.textContent.trim();
+                            if (!u) u = n2.getAttribute('src') || n2.getAttribute('url') || '';
+                            if (u && (n2.getAttribute('type') || '').includes('video')) {
+                                videoUrl = u;
+                                break;
+                            }
+                        }
+                    }
+                    if (!videoUrl) {
+                        showError('No video URL found in VAST', true);
+                        showLoading(false);
+                        playBtn.style.display = 'block';
+                        return;
+                    }
+
+                    // 2. ClickThrough
+                    currentClickUrl = '';
+                    var clickNode = xml.querySelector('ClickThrough');
+                    if (clickNode) currentClickUrl = clickNode.textContent.trim();
+
+                    // 3. Impressions
+                    impressionUrls = [];
+                    var impNodes = xml.querySelectorAll('Impression');
+                    for (var k = 0; k < impNodes.length; k++) {
+                        var u2 = impNodes[k].textContent.trim();
+                        if (u2) impressionUrls.push(u2);
+                    }
+                    var inlineImp = xml.querySelector('InLine Impression');
+                    if (inlineImp) {
+                        var u3 = inlineImp.textContent.trim();
+                        if (u3 && impressionUrls.indexOf(u3) === -1) impressionUrls.push(u3);
+                    }
+
+                    console.log('✅ Video URL:', videoUrl);
+                    console.log('✅ Impressions:', impressionUrls);
+                    console.log('✅ ClickThrough:', currentClickUrl);
+
+                    impressionsFired = false;
+                    showLoading(false);
+
+                    // ── Load & play ──
+                    loadVideo(videoUrl).then(function() {
+                        video.muted = false;
+                        isMuted = false;
+                        soundBtn.textContent = '🔊';
+
+                        video.load();
+                        var playPromise = video.play();
+                        if (playPromise !== undefined) {
+                            playPromise
+                                .then(function() {
+                                    console.log('✅ Video playing');
+                                    isAdPlaying = true;
+                                    showControls(true);
+                                    startSkipTimer();
+                                    fireImpressions();
+                                })
+                                .catch(function(err) {
+                                    console.error('❌ Video play error:', err);
+                                    showError('Tap to play video', true);
+                                    showLoading(false);
+                                    playBtn.style.display = 'block';
+                                    playBtn.textContent = '▶ Tap to Play';
+                                    playBtn.onclick = function() {
+                                        video.play().catch(function() {});
+                                        playBtn.style.display = 'none';
+                                        showLoading(true);
+                                    };
+                                });
+                        }
+
+                        video.onended = function() {
+                            finishAd();
+                        };
+
+                        video.onerror = function() {
+                            console.error('❌ Video error:', video.error);
+                            showError('Video error. Retry?', true);
+                            showLoading(false);
+                            playBtn.style.display = 'block';
+                        };
+
+                        var link = currentClickUrl || DEFAULT_CTA;
+                        downloadSmall.href = link;
+                        downloadSmall.style.display = 'inline-flex';
+                        downloadBig.href = link;
+                        downloadBig.style.display = 'inline-flex';
+
+                        playBtn.style.display = 'none';
+
+                        // Fullscreen
+                        if (!document.fullscreenElement) {
+                            main.requestFullscreen().catch(function() {});
+                        }
+                    });
+
+                } catch (e) {
+                    showError('Parse error: ' + e.message, true);
+                    showLoading(false);
+                    playBtn.style.display = 'block';
+                }
+            }
+
+            // ============================================================
+            //  Fetch VAST
+            // ============================================================
+            function fetchAndPlay() {
+                resetPlayer();
+                hideError();
+                showLoading(true);
+                playBtn.style.display = 'none';
+                playBtn.onclick = null;
+
+                fetch(VAST_URL, { cache: 'force-cache', mode: 'cors' })
+                    .then(function(r) {
+                        if (!r.ok) throw new Error('HTTP ' + r.status);
+                        return r.text();
+                    })
+                    .then(function(xml) {
+                        parseVASTAndPlay(xml);
+                    })
+                    .catch(function(err) {
+                        showError('Network error: ' + err.message, true);
+                        showLoading(false);
+                        playBtn.style.display = 'block';
+                    });
+            }
+
+            // ============================================================
+            //  Skip Timer
+            // ============================================================
+            function startSkipTimer() {
+                var rem = SKIP_DELAY;
+                skipBtn.disabled = true;
+                skipBtn.textContent = 'Skip ⏳ ' + rem + 's';
+                countdown.textContent = 'Ad · ' + rem + 's';
+                skipInterval = setInterval(function() {
+                    rem--;
+                    if (rem <= 0) {
+                        clearInterval(skipInterval);
+                        skipBtn.disabled = false;
+                        skipBtn.textContent = 'Skip ▶';
+                        countdown.textContent = 'Skip now';
+                    } else {
+                        skipBtn.textContent = 'Skip ⏳ ' + rem + 's';
+                        countdown.textContent = 'Ad · ' + rem + 's';
+                    }
+                }, 1000);
+            }
+
+            // ============================================================
+            //  Finish Ad
+            // ============================================================
+            function finishAd() {
+                clearInterval(skipInterval);
+                resetPlayer();
+                playBtn.style.display = 'block';
+                playBtn.textContent = '▶ Play Again';
+            }
+
+            // ============================================================
+            //  Event Listeners
+            // ============================================================
+            skipBtn.addEventListener('click', function() {
+                if (skipBtn.disabled) return;
+                finishAd();
+            });
+
+            playBtn.addEventListener('click', fetchAndPlay);
+            retryBtn.addEventListener('click', fetchAndPlay);
+
+            // ============================================================
+            //  Init
+            // ============================================================
+            resetPlayer();
+            console.log('✅ VAST Ad Player · HilltopAds');
+            console.log('🔊 Audio ON  |  ⏱️ Skip after ' + SKIP_DELAY + 's');
+            console.log('📦 VAST URL:', VAST_URL);
+
+        })();
+    </script>
+
 </body>
 </html>
