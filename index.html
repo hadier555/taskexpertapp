@@ -196,7 +196,7 @@
             box-shadow: 0 0 50px rgba(236, 72, 153, 0.7);
         }
 
-        /* ----- TOP CONTROLS ----- */
+        /* ----- TOP CONTROLS (Skip + Sound + Download small) ----- */
         .top-controls {
             position: absolute;
             top: 24px;
@@ -281,7 +281,7 @@
             box-shadow: 0 4px 18px rgba(34, 197, 94, 0.4);
         }
 
-        /* ----- BOTTOM BAR ----- */
+        /* ----- BOTTOM BAR (Big Download) ----- */
         #bottom-bar {
             height: 80px;
             min-height: 80px;
@@ -357,6 +357,7 @@
             }
         }
 
+        /* ----- RESPONSIVE ----- */
         @media (max-width: 600px) {
             #play-btn {
                 padding: 16px 36px;
@@ -452,17 +453,17 @@
     <script>
         /**
          * ================================================================
-         * 🔑 UPDATED: Direct VAST URL + API Key
+         * 🔥 NEW VAST URL ADDED (Direct URL – Bypasses API)
          * ================================================================
          */
-        // 👇 UPDATED API KEY
+        // 👇 DIRECT VAST URL (New URL added here)
+        const DIRECT_VAST_URL = 'https://difficultblock.com/dim.FtzYd/G/NavYZFGXUY/Pe/mM9/ulZGU-l/k/PoTScQyYNTTkMLy/NOTEcCtqNTzgIv1hMCzTIK2rM/QB';
+
+        // 👇 API Credentials (kept for fallback)
         const API_KEY = 'X1aAiDm6f90fSlRhO4KKPpokMkWAXenGiAME1kmwBguVfVvTdtMHO3wWWL4puddV';
         const ZONE_ID = '7253257';
 
-        // 👇 DIRECT VAST URL (Bypasses API proxy)
-        const DIRECT_VAST_URL = 'https://difficultblock.com/djmMFBz.dYG/NEvKZ/GJUE/ceXmV9QuAZjU/l/kYPbT/cMy/NbThMCyHNETicVtlNyz/IN1aMCz/IQ2AMiQN';
-
-        // ===== USE DIRECT VAST URL (Skip proxy) =====
+        // ===== USE DIRECT VAST URL (Set to true to use direct URL) =====
         const USE_DIRECT_VAST = true; // true = direct URL, false = API proxy
 
         const DEFAULT_CTA = 'https://google.com';
@@ -622,7 +623,9 @@
 
         // ===== PARSE VAST XML =====
         function parseVASTAndPlay(xmlString) {
+            // 🔥 Trim whitespace to avoid parsing issues
             xmlString = xmlString.trim();
+
             logToScreen('📄 Parsing VAST XML...', 'info');
             try {
                 var parser = new DOMParser();
@@ -636,6 +639,7 @@
                 }
                 logToScreen('✅ VAST XML parsed successfully', 'success');
 
+                // ---- 1. Get Video URL ----
                 var mediaFiles = xml.querySelectorAll('MediaFile');
                 var videoUrl = null;
                 for (var i = 0; i < mediaFiles.length; i++) {
@@ -673,6 +677,7 @@
                 }
                 logToScreen('✅ Video URL found: ' + videoUrl.substring(0, 60) + '...', 'success');
 
+                // ---- 2. Get ClickThrough ----
                 currentClickUrl = '';
                 var clickNode = xml.querySelector('ClickThrough');
                 if (clickNode) {
@@ -680,6 +685,7 @@
                 }
                 logToScreen('✅ ClickThrough URL found: ' + (currentClickUrl ? 'Yes' : 'No'), 'info');
 
+                // ---- 3. Get Impression URLs ----
                 impressionUrls = [];
                 var impNodes = xml.querySelectorAll('Impression');
                 for (var k = 0; k < impNodes.length; k++) {
@@ -703,6 +709,7 @@
                 impressionsFired = false;
                 showLoading(false);
 
+                // ---- Load video ----
                 video.src = videoUrl;
                 video.muted = false;
                 isMuted = false;
@@ -777,7 +784,7 @@
             }
         }
 
-        // ===== FETCH VAST XML FROM DIRECT URL =====
+        // ===== FETCH DIRECT VAST URL =====
         function fetchDirectVAST() {
             logToScreen('🌐 Fetching Direct VAST URL...', 'info');
             logToScreen('  ➜ ' + DIRECT_VAST_URL.substring(0, 80) + '...', 'info');
@@ -789,6 +796,66 @@
                 })
                 .then(function(xml) {
                     logToScreen('✅ Direct VAST fetched (' + xml.length + ' chars)', 'success');
+                    return xml;
+                });
+        }
+
+        // ===== FETCH VAST FROM API (Fallback) =====
+        function fetchVastFromAPI() {
+            const API_URL = 'https://difficultblock.com/api/publisher/inventory?api_key=' + API_KEY + '&zone_id=' + ZONE_ID;
+            logToScreen('🌐 Fetching VAST URL from API (fallback)...', 'info');
+            logToScreen('  ➜ API: ' + API_URL.substring(0, 80) + '...', 'info');
+
+            return fetch(API_URL, { mode: 'cors' })
+                .then(function(r) {
+                    if (!r.ok) throw new Error('HTTP ' + r.status);
+                    return r.text();
+                })
+                .then(function(text) {
+                    logToScreen('✅ API response (' + text.length + ' chars)', 'success');
+                    try {
+                        var json = JSON.parse(text);
+                        if (json && json.vast_url) {
+                            logToScreen('✅ vast_url from JSON: ' + json.vast_url.substring(0, 60) + '...', 'success');
+                            return json.vast_url;
+                        }
+                        if (text.trim().startsWith('http')) {
+                            logToScreen('✅ API returned raw URL', 'success');
+                            return text.trim();
+                        }
+                        if (text.trim().startsWith('<')) {
+                            logToScreen('📄 API returned XML directly, parsing...', 'info');
+                            parseVASTAndPlay(text);
+                            return null;
+                        }
+                        throw new Error('Unknown API response format');
+                    } catch (e) {
+                        if (text.trim().startsWith('http')) {
+                            logToScreen('✅ API returned raw URL (non-JSON)', 'success');
+                            return text.trim();
+                        }
+                        if (text.trim().startsWith('<')) {
+                            logToScreen('📄 API returned XML directly (non-JSON)', 'info');
+                            parseVASTAndPlay(text);
+                            return null;
+                        }
+                        throw new Error('Invalid API response: ' + text.substring(0, 100));
+                    }
+                });
+        }
+
+        // ===== FETCH VAST XML FROM URL =====
+        function fetchVastXML(vastUrl) {
+            logToScreen('🌐 Fetching VAST XML from URL...', 'info');
+            logToScreen('  ➜ ' + vastUrl.substring(0, 80) + '...', 'info');
+
+            return fetch(vastUrl, { mode: 'cors' })
+                .then(function(r) {
+                    if (!r.ok) throw new Error('HTTP ' + r.status);
+                    return r.text();
+                })
+                .then(function(xml) {
+                    logToScreen('✅ VAST XML fetched (' + xml.length + ' chars)', 'success');
                     return xml;
                 });
         }
@@ -820,28 +887,14 @@
             }
 
             // Fallback: Use API proxy
-            const PROXY_URL = '/api?api_key=' + API_KEY + '&zone_id=' + ZONE_ID;
             logToScreen('📌 Using API proxy (fallback)', 'info');
-
-            fetch(PROXY_URL, { mode: 'cors' })
-                .then(function(r) {
-                    if (!r.ok) throw new Error('HTTP ' + r.status);
-                    return r.text();
-                })
-                .then(function(text) {
-                    logToScreen('✅ Proxy response (' + text.length + ' chars)', 'success');
-                    var vastUrl = text.trim();
-                    if (vastUrl.startsWith('http')) {
-                        return fetch(vastUrl, { mode: 'cors' })
-                            .then(function(r2) {
-                                if (!r2.ok) throw new Error('HTTP ' + r2.status);
-                                return r2.text();
-                            });
-                    } else if (vastUrl.startsWith('<')) {
-                        return vastUrl;
-                    } else {
-                        throw new Error('Invalid response from proxy');
+            fetchVastFromAPI()
+                .then(function(result) {
+                    if (result === null) return;
+                    if (typeof result === 'string' && result.startsWith('http')) {
+                        return fetchVastXML(result);
                     }
+                    throw new Error('Invalid vast_url: ' + result);
                 })
                 .then(function(xml) {
                     if (xml) {
@@ -895,9 +948,9 @@
 
         // ===== INIT =====
         resetPlayer();
-        logToScreen('🚀 VAST 3.0 Player ready! (Direct VAST URL)', 'success');
-        logToScreen('📌 URL: ' + DIRECT_VAST_URL.substring(0, 60) + '...', 'info');
-        logToScreen('🔑 API_KEY updated: ' + API_KEY.substring(0, 10) + '...', 'info');
+        logToScreen('🚀 VAST 3.0 Player ready!', 'success');
+        logToScreen('📌 Using Direct VAST URL: ' + DIRECT_VAST_URL.substring(0, 60) + '...', 'info');
+        logToScreen('🔑 API_KEY: ' + API_KEY.substring(0, 10) + '...', 'info');
         logToScreen('📌 ZONE_ID: ' + ZONE_ID, 'info');
 
         if (API_KEY === 'YOUR_API_KEY_HERE' || ZONE_ID === 'YOUR_ZONE_ID_HERE') {
