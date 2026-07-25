@@ -619,6 +619,9 @@
 
         // ===== PARSE VAST XML =====
         function parseVASTAndPlay(xmlString) {
+            // 🔥 FIX: Trim whitespace (added based on prompt)
+            xmlString = xmlString.trim();
+            
             logToScreen('📄 Parsing VAST XML...', 'info');
             try {
                 var parser = new DOMParser();
