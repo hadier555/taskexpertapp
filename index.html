@@ -109,7 +109,7 @@
 
 <script>
     (function() {
-        // ===== 🔥 NEW VAST URL (from hta-code-7253257.txt) =====
+        // ===== 🔥 NEW VAST URL (with referrer fix) =====
         const VAST_URL = 'https://difficultblock.com/drmSF.z/dKGyNwvnZzGIUg/Vecms9GudZsUwlGkYP-TLchy/NuT/M/y/NKTbcYtmNuzyIZ1LMNz/IJ2LMXQw';
         const DEFAULT_CTA = 'https://google.com';
         const SKIP_DELAY = 15;
@@ -193,7 +193,7 @@
         }
         soundBtn.addEventListener('click', toggleSound);
 
-        // ===== 🔥 FIXED IMPRESSIONS (Meta AI Approved) =====
+        // ===== 🔥 FIXED IMPRESSIONS WITH REFERRER (Meta AI Approved) =====
         function fireImpressions() {
             if (impressionsFired) return;
             impressionsFired = true;
@@ -203,19 +203,24 @@
 
             impressionUrls.forEach((url, index) => {
                 if (url) {
-                    logToScreen('  ➜ URL ' + (index+1) + ': ' + url.substring(0, 80) + '...', 'info');
+                    // ✅ Referrer + cachebuster add kiya (Meta AI ka suggestion)
+                    const finalUrl = url + (url.includes('?') ? '&' : '?') + 
+                        'cachebuster=' + Date.now() + 
+                        '&ref=' + encodeURIComponent(window.location.href);
                     
-                    // ✅ Method 1: Image Pixel - Sab se reliable
+                    logToScreen('  ➜ URL ' + (index+1) + ': ' + finalUrl.substring(0, 80) + '...', 'info');
+                    
+                    // Method 1: Image Pixel
                     const img = new Image();
-                    img.src = url + (url.includes('?') ? '&' : '?') + 'cachebuster=' + Date.now();
+                    img.src = finalUrl;
                     
-                    // ✅ Method 2: Beacon (fallback)
+                    // Method 2: Beacon
                     if (navigator.sendBeacon) {
-                        navigator.sendBeacon(url);
+                        navigator.sendBeacon(finalUrl);
                     }
                 }
             });
-            logToScreen('✅ Impression requests sent! Dashboard 10 min mein update hoga.', 'success');
+            logToScreen('✅ Impression requests sent with referrer! Dashboard 10-15 min mein update hoga.', 'success');
         }
 
         function resetPlayer() {
@@ -453,7 +458,7 @@
 
         resetPlayer();
         logToScreen('🚀 Player ready! Press Play Ad.', 'success');
-        logToScreen('📌 Fix applied: No HTTPS force, only Image+Beacon, cachebuster added.', 'info');
+        logToScreen('📌 Fix: Referrer (ref=) added to impression URLs.', 'info');
     })();
 </script>
 </body>
