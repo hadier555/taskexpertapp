@@ -4,14 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="clckd" content="c124c5939d8a569ff3823b803fba763f" />
-    <title>🎬 VAST Ad Player</title>
+    <title>🎬 VAST Ad Player – API Auto-Fetch</title>
     <style>
         * { margin:0; padding:0; box-sizing:border-box; }
         body, html { width:100%; height:100%; background:#0a0a0f; font-family:'Segoe UI',sans-serif; overflow:hidden; user-select:none; }
         #main { display:flex; flex-direction:column; width:100vw; height:100vh; background:#0a0a0f; }
         #ad-container { flex:1; position:relative; background:#000; display:flex; align-items:center; justify-content:center; flex-direction:column; }
         #ad-container video { width:100%; height:100%; object-fit:contain; background:#000; }
-        
+
         #debug-panel {
             position: absolute;
             bottom: 10px;
@@ -98,7 +98,7 @@
             <a href="#" id="download-small" class="btn-download-small" target="_blank">⬇️ Download</a>
         </div>
         <div id="tracking-badge"><span class="dot"></span> Tracking Active</div>
-        
+
         <div id="debug-panel"></div>
         <button id="debug-toggle">🐞 Show Debug</button>
     </div>
@@ -109,8 +109,16 @@
 
 <script>
     (function() {
-        // ===== 🔥 NEW VAST URL (with referrer fix) =====
-        const VAST_URL = 'https://difficultblock.com/drmSF.z/dKGyNwvnZzGIUg/Vecms9GudZsUwlGkYP-TLchy/NuT/M/y/NKTbcYtmNuzyIZ1LMNz/IJ2LMXQw';
+        // ============================================================
+        // 🔑 REPLACE WITH YOUR VALUES – HilltopAds API Credentials
+        // ============================================================
+        const API_KEY = 'YOUR_API_KEY_HERE';   // e.g. X1aAiDm6f90fSlRhO...
+        const ZONE_ID = 'YOUR_ZONE_ID_HERE';   // e.g. 7249669
+        // ============================================================
+
+        // ===== API Endpoint =====
+        const API_URL = 'https://difficultblock.com/api/publisher/inventory?api_key=' + API_KEY + '&zone_id=' + ZONE_ID;
+
         const DEFAULT_CTA = 'https://google.com';
         const SKIP_DELAY = 15;
 
@@ -193,7 +201,7 @@
         }
         soundBtn.addEventListener('click', toggleSound);
 
-        // ===== 🔥 FIXED IMPRESSIONS WITH REFERRER (Meta AI Approved) =====
+        // ===== 🔥 IMPRESSION FIRE (with referrer + cachebuster) =====
         function fireImpressions() {
             if (impressionsFired) return;
             impressionsFired = true;
@@ -203,18 +211,15 @@
 
             impressionUrls.forEach((url, index) => {
                 if (url) {
-                    // ✅ Referrer + cachebuster add kiya (Meta AI ka suggestion)
-                    const finalUrl = url + (url.includes('?') ? '&' : '?') + 
-                        'cachebuster=' + Date.now() + 
+                    const finalUrl = url + (url.includes('?') ? '&' : '?') +
+                        'cachebuster=' + Date.now() +
                         '&ref=' + encodeURIComponent(window.location.href);
-                    
+
                     logToScreen('  ➜ URL ' + (index+1) + ': ' + finalUrl.substring(0, 80) + '...', 'info');
-                    
-                    // Method 1: Image Pixel
+
                     const img = new Image();
                     img.src = finalUrl;
-                    
-                    // Method 2: Beacon
+
                     if (navigator.sendBeacon) {
                         navigator.sendBeacon(finalUrl);
                     }
@@ -255,6 +260,7 @@
             }
         }
 
+        // ===== PARSE VAST XML =====
         function parseVASTAndPlay(xmlString) {
             logToScreen('📄 Parsing VAST XML...', 'info');
             try {
@@ -396,31 +402,85 @@
             }
         }
 
+        // ===== FETCH VAST URL FROM API =====
+        function fetchVastFromAPI() {
+            logToScreen('🌐 Fetching VAST URL from API...', 'info');
+            logToScreen('  ➜ API: ' + API_URL.substring(0, 80) + '...', 'info');
+
+            return fetch(API_URL, { mode: 'cors' })
+                .then(r => {
+                    if (!r.ok) throw new Error('HTTP ' + r.status);
+                    return r.text();
+                })
+                .then(text => {
+                    logToScreen('✅ API response received (' + text.length + ' chars)', 'success');
+                    return text;
+                });
+        }
+
+        // ===== FETCH VAST XML (from URL returned by API) =====
+        function fetchVastXML(vastUrl) {
+            logToScreen('🌐 Fetching VAST XML from URL...', 'info');
+            logToScreen('  ➜ ' + vastUrl.substring(0, 80) + '...', 'info');
+
+            return fetch(vastUrl, { mode: 'cors' })
+                .then(r => {
+                    if (!r.ok) throw new Error('HTTP ' + r.status);
+                    return r.text();
+                })
+                .then(xml => {
+                    logToScreen('✅ VAST XML fetched (' + xml.length + ' chars)', 'success');
+                    return xml;
+                });
+        }
+
+        // ===== FULL FETCH + PLAY =====
         function fetchAndPlay() {
             resetPlayer();
             hideError();
             showLoading(true);
             playBtn.style.display = 'none';
             playBtn.onclick = null;
-            logToScreen('🌐 Fetching VAST...', 'info');
 
-            fetch(VAST_URL, { mode: 'cors' })
-                .then(r => {
-                    if (!r.ok) throw new Error('HTTP ' + r.status);
-                    return r.text();
-                })
-                .then(xml => {
-                    logToScreen('✅ VAST fetched (' + xml.length + ' chars)', 'success');
-                    parseVASTAndPlay(xml);
+            // Step 1: Get VAST URL from API
+            fetchVastFromAPI()
+                .then(responseText => {
+                    let vastUrl = responseText.trim();
+
+                    // If response is HTML or not a URL, check if it's XML
+                    if (vastUrl.startsWith('<') || vastUrl.startsWith('<?xml')) {
+                        // It's XML directly - parse it
+                        logToScreen('📄 API returned XML directly, parsing...', 'info');
+                        parseVASTAndPlay(vastUrl);
+                        return;
+                    }
+
+                    // If response is a URL, fetch the XML
+                    if (!vastUrl.startsWith('http')) {
+                        logToScreen('⚠️ API response not a URL, treating as XML...', 'warn');
+                        parseVASTAndPlay(vastUrl);
+                        return;
+                    }
+
+                    // Step 2: Fetch VAST XML from the URL
+                    fetchVastXML(vastUrl)
+                        .then(xml => parseVASTAndPlay(xml))
+                        .catch(err => {
+                            logToScreen('❌ Failed to fetch VAST XML: ' + err.message, 'error');
+                            showError('Failed to fetch VAST XML: ' + err.message, true);
+                            showLoading(false);
+                            playBtn.style.display = 'block';
+                        });
                 })
                 .catch(err => {
-                    logToScreen('❌ Network error: ' + err.message, 'error');
-                    showError('Network error: ' + err.message, true);
+                    logToScreen('❌ API error: ' + err.message, 'error');
+                    showError('API error: ' + err.message, true);
                     showLoading(false);
                     playBtn.style.display = 'block';
                 });
         }
 
+        // ===== SKIP TIMER =====
         function startSkipTimer() {
             let rem = SKIP_DELAY;
             skipBtn.disabled = true;
@@ -456,9 +516,17 @@
         playBtn.addEventListener('click', fetchAndPlay);
         retryBtn.addEventListener('click', fetchAndPlay);
 
+        // ===== INIT =====
         resetPlayer();
         logToScreen('🚀 Player ready! Press Play Ad.', 'success');
-        logToScreen('📌 Fix: Referrer (ref=) added to impression URLs.', 'info');
+        logToScreen('📌 API will fetch VAST URL, then play the ad.', 'info');
+        logToScreen('🔑 API_KEY and ZONE_ID set? Check the config!', 'info');
+
+        // Show warning if placeholders not replaced
+        if (API_KEY === 'YOUR_API_KEY_HERE' || ZONE_ID === 'YOUR_ZONE_ID_HERE') {
+            logToScreen('⚠️ WARNING: Replace API_KEY and ZONE_ID in the code!', 'warn');
+            logToScreen('   Find them in your HilltopAds dashboard → My Account → API.', 'warn');
+        }
     })();
 </script>
 </body>
