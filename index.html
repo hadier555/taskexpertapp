@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="clckd" content="c124c5939d8a569ff3823b803fba763f" />
-    <title>🎬 VAST 3.0 Ad Player – API Auto-Fetch</title>
+    <title>🎬 VAST 3.0 Ad Player – No CORS</title>
     <style>
         * {
             margin: 0;
@@ -196,7 +196,7 @@
             box-shadow: 0 0 50px rgba(236, 72, 153, 0.7);
         }
 
-        /* ----- TOP CONTROLS (Skip + Sound + Download small) ----- */
+        /* ----- TOP CONTROLS ----- */
         .top-controls {
             position: absolute;
             top: 24px;
@@ -281,7 +281,7 @@
             box-shadow: 0 4px 18px rgba(34, 197, 94, 0.4);
         }
 
-        /* ----- BOTTOM BAR (Big Download) ----- */
+        /* ----- BOTTOM BAR ----- */
         #bottom-bar {
             height: 80px;
             min-height: 80px;
@@ -357,7 +357,6 @@
             }
         }
 
-        /* ----- RESPONSIVE ----- */
         @media (max-width: 600px) {
             #play-btn {
                 padding: 16px 36px;
@@ -453,17 +452,16 @@
     <script>
         /**
          * ================================================================
-         * 🔑 HILLTOPADS API CREDENTIALS – Replace with your own
+         * 🔑 HILLTOPADS CREDENTIALS – REPLACE WITH YOUR ACTUAL VALUES
          * ================================================================
          */
+        // 👇 REPLACE THESE WITH YOUR ACTUAL VALUES
         const API_KEY = 'X1aAiDm6f90fSIRhO4KKPpokMkWAXenGiAME1kmwBguVfVvTdtMHO3wWWL4puddV';
         const ZONE_ID = '7253257';
-        /**
-         * ================================================================
-         */
+        // ================================================================
 
-        // ===== API Endpoint =====
-        const API_URL = 'https://difficultblock.com/api/publisher/inventory?api_key=' + API_KEY + '&zone_id=' + ZONE_ID;
+        // ===== API Proxy endpoint (Cloudflare Pages Function) =====
+        const PROXY_URL = '/api?api_key=' + API_KEY + '&zone_id=' + ZONE_ID;
         const DEFAULT_CTA = 'https://google.com';
         const SKIP_DELAY = 15;
 
@@ -507,6 +505,7 @@
                 debugToggle.textContent = '🐞 Hide Debug';
                 debugVisible = true;
             }
+            console.log('[VAST]', msg);
         }
 
         debugToggle.addEventListener('click', function() {
@@ -563,7 +562,6 @@
 
             impressionUrls.forEach(function(url, index) {
                 if (url) {
-                    // Add cachebuster + referrer (NO https force – use as-is)
                     var finalUrl = url;
                     if (finalUrl.indexOf('?') === -1) {
                         finalUrl += '?';
@@ -575,11 +573,9 @@
 
                     logToScreen('  ➜ URL ' + (index + 1) + ': ' + finalUrl.substring(0, 80) + '...', 'info');
 
-                    // Method 1: Image pixel (most reliable)
                     var img = new Image();
                     img.src = finalUrl;
 
-                    // Method 2: sendBeacon (modern fallback)
                     if (navigator.sendBeacon) {
                         navigator.sendBeacon(finalUrl);
                     }
@@ -614,7 +610,6 @@
             video.onplay = null;
             video.onerror = null;
             video.ontimeupdate = null;
-            // Keep debug panel from overflowing
             if (debugPanel.children.length > 30) {
                 while (debugPanel.children.length > 20) {
                     debugPanel.removeChild(debugPanel.firstChild);
@@ -628,7 +623,6 @@
             try {
                 var parser = new DOMParser();
                 var xml = parser.parseFromString(xmlString, 'text/xml');
-                // Check for parser error
                 if (xml.querySelector('parsererror')) {
                     showError('Invalid XML response', true);
                     showLoading(false);
@@ -653,7 +647,6 @@
                         break;
                     }
                 }
-                // Fallback: any video type
                 if (!videoUrl) {
                     for (var j = 0; j < mediaFiles.length; j++) {
                         var n = mediaFiles[j];
@@ -694,7 +687,6 @@
                         impressionUrls.push(u2);
                     }
                 }
-                // Also check InLine Impression
                 var inlineImp = xml.querySelector('InLine Impression');
                 if (inlineImp) {
                     var u3 = inlineImp.textContent.trim();
@@ -726,7 +718,6 @@
                             showControls(true);
                             startSkipTimer();
 
-                            // Impression: fire after 1 second of playback
                             var impressionTimeout = setTimeout(function() {
                                 fireImpressions();
                             }, 1000);
@@ -753,13 +744,11 @@
                         });
                 }
 
-                // ---- Video ended ----
                 video.onended = function() {
                     logToScreen('⏹ Video ended', 'info');
                     finishAd();
                 };
 
-                // ---- Video error ----
                 video.onerror = function() {
                     var errMsg = video.error ? video.error.message : 'unknown';
                     logToScreen('❌ Video error: ' + errMsg, 'error');
@@ -768,7 +757,6 @@
                     playBtn.style.display = 'block';
                 };
 
-                // ---- Update Download buttons ----
                 var link = currentClickUrl || DEFAULT_CTA;
                 downloadSmall.href = link;
                 downloadSmall.style.display = 'inline-flex';
@@ -777,7 +765,6 @@
 
                 playBtn.style.display = 'none';
 
-                // ---- Fullscreen ----
                 if (!document.fullscreenElement) {
                     main.requestFullscreen().catch(function() {});
                 }
@@ -790,49 +777,46 @@
             }
         }
 
-        // ===== FETCH VAST URL FROM API =====
+        // ===== FETCH VAST URL FROM PROXY =====
         function fetchVastFromAPI() {
-            logToScreen('🌐 Fetching VAST URL from API...', 'info');
-            logToScreen('  ➜ API: ' + API_URL.substring(0, 80) + '...', 'info');
+            logToScreen('🌐 Fetching VAST URL from proxy...', 'info');
+            logToScreen('  ➜ ' + PROXY_URL.substring(0, 80) + '...', 'info');
 
-            return fetch(API_URL, { mode: 'cors' })
+            return fetch(PROXY_URL, { mode: 'cors' })
                 .then(function(r) {
                     if (!r.ok) throw new Error('HTTP ' + r.status);
                     return r.text();
                 })
                 .then(function(text) {
-                    logToScreen('✅ API response (' + text.length + ' chars)', 'success');
-                    // Try to parse as JSON
+                    logToScreen('✅ Proxy response (' + text.length + ' chars)', 'success');
+
                     try {
                         var json = JSON.parse(text);
                         if (json && json.vast_url) {
                             logToScreen('✅ vast_url from JSON: ' + json.vast_url.substring(0, 60) + '...', 'success');
                             return json.vast_url;
                         }
-                        // If no vast_url, maybe response is raw URL
                         if (text.trim().startsWith('http')) {
-                            logToScreen('✅ API returned raw URL', 'success');
+                            logToScreen('✅ Proxy returned raw URL', 'success');
                             return text.trim();
                         }
-                        // If it's XML, return as XML string
                         if (text.trim().startsWith('<')) {
-                            logToScreen('📄 API returned XML directly, parsing...', 'info');
+                            logToScreen('📄 Proxy returned XML directly, parsing...', 'info');
                             parseVASTAndPlay(text);
                             return null;
                         }
-                        throw new Error('Unknown API response format');
+                        throw new Error('Unknown response format');
                     } catch (e) {
-                        // Not JSON, maybe raw URL or XML
                         if (text.trim().startsWith('http')) {
-                            logToScreen('✅ API returned raw URL (non-JSON)', 'success');
+                            logToScreen('✅ Proxy returned raw URL (non-JSON)', 'success');
                             return text.trim();
                         }
                         if (text.trim().startsWith('<')) {
-                            logToScreen('📄 API returned XML directly (non-JSON)', 'info');
+                            logToScreen('📄 Proxy returned XML directly (non-JSON)', 'info');
                             parseVASTAndPlay(text);
                             return null;
                         }
-                        throw new Error('Invalid API response: ' + text.substring(0, 100));
+                        throw new Error('Invalid response: ' + text.substring(0, 100));
                     }
                 });
         }
@@ -863,9 +847,7 @@
 
             fetchVastFromAPI()
                 .then(function(result) {
-                    // If result is null, already parsed (direct XML)
                     if (result === null) return;
-                    // result is vast_url string
                     if (typeof result === 'string' && result.startsWith('http')) {
                         return fetchVastXML(result);
                     }
@@ -923,15 +905,13 @@
 
         // ===== INIT =====
         resetPlayer();
-        logToScreen('🚀 VAST 3.0 Player ready! Press Play Ad.', 'success');
-        logToScreen('📌 API will fetch VAST URL → then play ad.', 'info');
+        logToScreen('🚀 VAST 3.0 Player ready! (CORS fixed via proxy)', 'success');
+        logToScreen('📌 API proxy: /api', 'info');
         logToScreen('🔑 API_KEY: ' + API_KEY.substring(0, 10) + '...', 'info');
         logToScreen('📌 ZONE_ID: ' + ZONE_ID, 'info');
 
-        // Warn if placeholders still present
         if (API_KEY === 'YOUR_API_KEY_HERE' || ZONE_ID === 'YOUR_ZONE_ID_HERE') {
             logToScreen('⚠️ WARNING: Replace API_KEY and ZONE_ID in the code!', 'warn');
-            logToScreen('   Find them in HilltopAds → My Account → API.', 'warn');
         }
     </script>
 </body>
