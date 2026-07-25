@@ -12,7 +12,6 @@
         #ad-container { flex:1; position:relative; background:#000; display:flex; align-items:center; justify-content:center; flex-direction:column; }
         #ad-container video { width:100%; height:100%; object-fit:contain; background:#000; }
         
-        /* ---- Debug Panel (on-screen console) ---- */
         #debug-panel {
             position: absolute;
             bottom: 10px;
@@ -100,7 +99,6 @@
         </div>
         <div id="tracking-badge"><span class="dot"></span> Tracking Active</div>
         
-        <!-- 🔥 DEBUG PANEL (mobile-friendly) -->
         <div id="debug-panel"></div>
         <button id="debug-toggle">🐞 Show Debug</button>
     </div>
@@ -140,7 +138,7 @@
         let impressionUrls = [];
         let impressionsFired = false;
 
-        // ===== DEBUG FUNCTION =====
+        // ===== DEBUG =====
         let debugVisible = false;
         function logToScreen(msg, type = 'info') {
             const div = document.createElement('div');
@@ -195,26 +193,29 @@
         }
         soundBtn.addEventListener('click', toggleSound);
 
-        // ===== 🔥 IMPRESSION FIRE =====
+        // ===== 🔥 FIXED IMPRESSIONS (Meta AI Approved) =====
         function fireImpressions() {
             if (impressionsFired) return;
             impressionsFired = true;
 
-            const secureUrls = impressionUrls.map(url => url.replace(/^http:/, 'https:'));
-            logToScreen('🔥 FIRING ' + secureUrls.length + ' IMPRESSION(S)', 'success');
+            logToScreen('🔥 FIRING ' + impressionUrls.length + ' IMPRESSION(S)', 'success');
             trackingBadge.style.display = 'flex';
 
-            secureUrls.forEach((url, index) => {
+            impressionUrls.forEach((url, index) => {
                 if (url) {
                     logToScreen('  ➜ URL ' + (index+1) + ': ' + url.substring(0, 80) + '...', 'info');
-                    new Image().src = url;
-                    fetch(url, { mode: 'no-cors' }).catch(() => {});
+                    
+                    // ✅ Method 1: Image Pixel - Sab se reliable
+                    const img = new Image();
+                    img.src = url + (url.includes('?') ? '&' : '?') + 'cachebuster=' + Date.now();
+                    
+                    // ✅ Method 2: Beacon (fallback)
                     if (navigator.sendBeacon) {
                         navigator.sendBeacon(url);
                     }
                 }
             });
-            logToScreen('✅ Impression requests sent! Check dashboard in 5-10 mins.', 'success');
+            logToScreen('✅ Impression requests sent! Dashboard 10 min mein update hoga.', 'success');
         }
 
         function resetPlayer() {
@@ -242,7 +243,6 @@
             video.onplay = null;
             video.onerror = null;
             video.ontimeupdate = null;
-            // Clear debug when resetting (keep last few lines)
             if (debugPanel.children.length > 30) {
                 while (debugPanel.children.length > 20) {
                     debugPanel.removeChild(debugPanel.firstChild);
@@ -264,7 +264,6 @@
                 }
                 logToScreen('✅ VAST XML parsed successfully', 'success');
 
-                // 1. Video URL
                 const mediaFiles = xml.querySelectorAll('MediaFile');
                 let videoUrl = null;
                 for (let node of mediaFiles) {
@@ -295,13 +294,11 @@
                 }
                 logToScreen('✅ Video URL found: ' + videoUrl.substring(0, 60) + '...', 'success');
 
-                // 2. ClickThrough
                 currentClickUrl = '';
                 const clickNode = xml.querySelector('ClickThrough');
                 if (clickNode) currentClickUrl = clickNode.textContent.trim();
                 logToScreen('✅ ClickThrough URL found: ' + (currentClickUrl ? 'Yes' : 'No'), 'info');
 
-                // 3. Impressions
                 impressionUrls = [];
                 const impressionNodes = xml.querySelectorAll('Impression');
                 impressionNodes.forEach(node => {
@@ -321,7 +318,6 @@
                 impressionsFired = false;
                 showLoading(false);
 
-                // Load video
                 video.src = videoUrl;
                 video.muted = false;
                 isMuted = false;
@@ -457,7 +453,7 @@
 
         resetPlayer();
         logToScreen('🚀 Player ready! Press Play Ad.', 'success');
-        logToScreen('📌 Debug panel will show what happens.', 'info');
+        logToScreen('📌 Fix applied: No HTTPS force, only Image+Beacon, cachebuster added.', 'info');
     })();
 </script>
 </body>
