@@ -1,961 +1,1218 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <meta name="clckd" content="c124c5939d8a569ff3823b803fba763f" />
-    <title>🎬 VAST 3.0 Ad Player – Direct URL</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Task Expert – Sign Up</title>
+
+    <!-- Firebase SDKs (only what's needed) -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js">
+    </script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js">
+    </script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js">
+    </script>
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
     <style>
+        /* ----- RESET & BASE ----- */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-        body,
-        html {
-            width: 100%;
-            height: 100%;
-            background: #0a0a0f;
-            font-family: 'Segoe UI', system-ui, sans-serif;
-            overflow: hidden;
-            user-select: none;
-        }
-        #main {
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: #f5f7fb;
+            min-height: 100vh;
             display: flex;
-            flex-direction: column;
-            width: 100vw;
-            height: 100vh;
-            background: #0a0a0f;
-        }
-        #ad-container {
-            flex: 1;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
             position: relative;
-            background: #000;
+        }
+
+        /* ===== FULL SCREEN LOADING SCREEN (exactly like loading.html) ===== */
+        #loadingOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #1e3c72 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            transition: opacity 0.7s ease, visibility 0.7s ease;
+            padding: 20px;
+        }
+        #loadingOverlay.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+        .loader-container {
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
+        }
+
+        .logo-icon {
+            font-size: 72px;
+            color: #fff;
+            margin-bottom: 20px;
+            animation: pulseIcon 1.8s ease-in-out infinite;
+        }
+        @keyframes pulseIcon {
+            0%,
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.08);
+                opacity: 0.8;
+            }
+        }
+
+        .app-title {
+            color: #fff;
+            font-size: 32px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+        .app-subtitle {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 14px;
+            margin-bottom: 40px;
+        }
+
+        .loader-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+            width: 100%;
+            max-width: 280px;
+        }
+        .loader-ring {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: 4px solid rgba(255, 255, 255, 0.15);
+            border-top-color: #fff;
+            border-right-color: #38ef7d;
+            animation: spinRing 1s cubic-bezier(0.6, 0, 0.4, 1) infinite;
+        }
+        @keyframes spinRing {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .loader-bar-track {
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+        }
+        .loader-bar-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #38ef7d, #11998e);
+            border-radius: 4px;
+            transition: width 0.15s linear;
+        }
+
+        .loader-status {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 13px;
+            letter-spacing: 0.5px;
+            text-align: center;
+            min-height: 20px;
+        }
+
+        .loader-dots {
+            display: flex;
+            gap: 6px;
+            justify-content: center;
+        }
+        .loader-dots span {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            animation: dotPulse 1.4s ease-in-out infinite;
+        }
+        .loader-dots span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        .loader-dots span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+        @keyframes dotPulse {
+            0%,
+            80%,
+            100% {
+                transform: scale(0.6);
+                opacity: 0.3;
+            }
+            40% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .loader-footer {
+            position: absolute;
+            bottom: 40px;
+            color: rgba(255, 255, 255, 0.25);
+            font-size: 12px;
+            letter-spacing: 2px;
+        }
+
+        /* ----- CARD (Light theme) ----- */
+        .card {
+            background: #ffffff;
+            max-width: 500px;
+            width: 100%;
+            padding: 2rem 2rem 2.2rem;
+            border-radius: 28px;
+            box-shadow: 0 12px 40px -10px rgba(26, 74, 122, 0.12);
+            transition: opacity 0.4s ease, transform 0.4s ease;
+            opacity: 0;
+            transform: translateY(18px);
+            position: relative;
+            overflow: hidden;
+        }
+        .card.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #1a4a7a, #2a7de1, #1a4a7a);
+            background-size: 200% 100%;
+            animation: shimmer 3s infinite linear;
+        }
+        @keyframes shimmer {
+            0% {
+                background-position: -200% 0;
+            }
+            100% {
+                background-position: 200% 0;
+            }
+        }
+        .card.hidden {
+            display: none;
+        }
+
+        /* ----- HEADER ----- */
+        .header h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #0b1a33;
+            letter-spacing: -0.5px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .header h1 i {
+            color: #1a4a7a;
+        }
+        .header p {
+            color: #5b6f87;
+            font-size: 0.95rem;
+            margin-top: 2px;
+        }
+        .header .sub {
+            font-size: 0.85rem;
+            color: #7a8aa0;
+            margin-top: 2px;
+        }
+
+        /* ----- ADMIN BANNER ----- */
+        .admin-banner {
+            background: #eef3fa;
+            border-left: 4px solid #2a7de1;
+            padding: 0.75rem 1rem;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            color: #1d2b41;
+            margin: 1rem 0 0.2rem;
+            display: none;
+            word-break: break-word;
+        }
+        .admin-banner.show {
+            display: block;
+        }
+        .admin-banner .label {
+            font-weight: 600;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            color: #2a7de1;
+            display: block;
+            margin-bottom: 2px;
+        }
+
+        /* ----- BONUS BOX ----- */
+        .bonus-box {
+            background: #f7faff;
+            border-radius: 16px;
+            padding: 0.9rem 1.2rem;
+            margin: 1.2rem 0 1.5rem;
+            border: 1px solid #e6edf6;
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        .bonus-item {
+            display: flex;
+            align-items: baseline;
+            gap: 4px;
+            font-size: 0.95rem;
+            color: #1d2b41;
+        }
+        .bonus-item .num {
+            font-weight: 700;
+            font-size: 1.2rem;
+            color: #0b1a33;
+        }
+        .bonus-item .num.green {
+            color: #0f973d;
+        }
+        .bonus-total {
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: #0b1a33;
+            margin-left: auto;
+            background: #e1ebfa;
+            padding: 0.1rem 0.9rem;
+            border-radius: 30px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .bonus-item.referral-hidden {
+            display: none;
+        }
+
+        /* ----- FORM ----- */
+        .form-group {
+            margin-bottom: 1.1rem;
+        }
+        .form-group label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #1d2b41;
+            margin-bottom: 4px;
+        }
+        .form-group label i {
+            color: #1a4a7a;
+            width: 18px;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1.5px solid #d8e1ec;
+            border-radius: 14px;
+            font-size: 1rem;
+            background: #fafcff;
+            transition: border 0.2s;
+        }
+        .form-group input:focus {
+            outline: none;
+            border-color: #2a7de1;
+            background: #ffffff;
+        }
+        .form-group input:disabled {
+            background: #f0f2f5;
+            color: #6c7a8a;
+            cursor: not-allowed;
+            opacity: 0.8;
+        }
+        .form-group .hint {
+            font-size: 0.75rem;
+            color: #7a8aa0;
+            margin-top: 4px;
+        }
+        .form-group .hint i {
+            color: #1a4a7a;
+        }
+
+        /* ----- GOOGLE BUTTON ----- */
+        .btn-google {
+            width: 100%;
+            padding: 0.85rem;
+            border: none;
+            border-radius: 40px;
+            background: #1a2b44;
+            color: #fff;
+            font-size: 1rem;
+            font-weight: 600;
             display: flex;
             align-items: center;
             justify-content: center;
-            flex-direction: column;
-        }
-        #ad-container video {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-            background: #000;
-        }
-
-        /* ----- DEBUG PANEL ----- */
-        #debug-panel {
-            position: absolute;
-            bottom: 10px;
-            left: 10px;
-            right: 10px;
-            max-height: 150px;
-            overflow-y: auto;
-            background: rgba(0, 0, 0, 0.88);
-            color: #0f0;
-            font-size: 11px;
-            font-family: 'Courier New', monospace;
-            padding: 8px 12px;
-            border-radius: 8px;
-            z-index: 50;
-            border: 1px solid #333;
-            backdrop-filter: blur(4px);
-            display: none;
-            pointer-events: none;
-            scroll-behavior: smooth;
-        }
-        #debug-panel .log-line {
-            padding: 2px 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-        }
-        #debug-panel .log-error {
-            color: #f87171;
-        }
-        #debug-panel .log-success {
-            color: #34d399;
-        }
-        #debug-panel .log-info {
-            color: #60a5fa;
-        }
-        #debug-panel .log-warn {
-            color: #fbbf24;
-        }
-        #debug-toggle {
-            position: absolute;
-            bottom: 10px;
-            right: 10px;
-            z-index: 55;
-            background: rgba(255, 255, 255, 0.08);
-            color: #aaa;
-            border: 1px solid #444;
-            border-radius: 20px;
-            padding: 4px 14px;
-            font-size: 11px;
+            gap: 12px;
             cursor: pointer;
-            pointer-events: auto;
-            transition: 0.2s;
+            transition: background 0.2s, transform 0.15s;
+            margin-top: 0.4rem;
         }
-        #debug-toggle:hover {
-            background: rgba(255, 255, 255, 0.18);
+        .btn-google:hover {
+            background: #0f1e34;
         }
-
-        /* ----- PLAY BUTTON ----- */
-        #play-btn {
-            position: absolute;
-            padding: 20px 56px;
-            font-size: 28px;
-            font-weight: 700;
-            background: linear-gradient(135deg, #f43f5e, #ec4899);
-            color: #fff;
-            border: none;
-            border-radius: 60px;
-            cursor: pointer;
-            box-shadow: 0 0 40px rgba(236, 72, 153, 0.5);
-            z-index: 20;
-            transition: 0.3s;
-            text-transform: uppercase;
+        .btn-google:active {
+            transform: scale(0.97);
         }
-        #play-btn:hover {
-            transform: scale(1.05);
-            box-shadow: 0 0 60px rgba(236, 72, 153, 0.7);
+        .btn-google:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
         }
-        #play-btn:active {
-            transform: scale(0.95);
+        .btn-google svg {
+            width: 22px;
+            height: 22px;
+            flex-shrink: 0;
         }
 
-        /* ----- LOADING ----- */
-        #loading {
-            position: absolute;
-            inset: 0;
-            display: none;
-            flex-direction: column;
+        /* ----- DOWNLOAD LINK (top) ----- */
+        .download-top {
+            text-align: right;
+            margin-bottom: 0.2rem;
+        }
+        .download-top a {
+            color: #2a7de1;
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-decoration: none;
+            display: inline-flex;
             align-items: center;
-            justify-content: center;
-            background: rgba(0, 0, 0, 0.85);
-            z-index: 10;
-            color: #fff;
-            gap: 16px;
+            gap: 6px;
         }
-        #loading .spinner {
-            width: 48px;
-            height: 48px;
-            border: 4px solid rgba(255, 255, 255, 0.15);
-            border-top-color: #ec4899;
+        .download-top a:hover {
+            text-decoration: underline;
+        }
+
+        /* ----- SUCCESS CARD ----- */
+        .success-icon {
+            font-size: 3.2rem;
+            text-align: center;
+            margin-bottom: 0.2rem;
+        }
+        .success-title {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: #0b1a33;
+            text-align: center;
+        }
+        .success-sub {
+            text-align: center;
+            color: #5b6f87;
+            margin: 0.2rem 0 1rem;
+        }
+        .coin-breakdown {
+            background: #f7faff;
+            border-radius: 16px;
+            padding: 1rem 1.2rem;
+            margin: 1rem 0;
+            border: 1px solid #e6edf6;
+        }
+        .coin-breakdown .row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.4rem 0;
+            font-size: 0.95rem;
+        }
+        .coin-breakdown .row.total {
+            border-top: 2px solid #d8e1ec;
+            margin-top: 0.3rem;
+            padding-top: 0.7rem;
+            font-weight: 700;
+            font-size: 1.05rem;
+        }
+        .coin-breakdown .row .val {
+            font-weight: 600;
+        }
+
+        .btn-download {
+            display: inline-block;
+            width: 100%;
+            padding: 0.85rem;
+            border: none;
+            border-radius: 40px;
+            background: #0f973d;
+            color: #fff;
+            font-size: 1rem;
+            font-weight: 700;
+            text-align: center;
+            text-decoration: none;
+            margin: 0.6rem 0 0.4rem;
+            transition: background 0.2s, transform 0.15s;
+            cursor: pointer;
+        }
+        .btn-download:hover {
+            background: #0d7e32;
+        }
+        .btn-download:active {
+            transform: scale(0.97);
+        }
+        .btn-download.disabled {
+            opacity: 0.5;
+            pointer-events: none;
+            filter: grayscale(0.4);
+        }
+
+        .download-message {
+            background: #f2f6fc;
+            border-radius: 12px;
+            padding: 0.7rem 1rem;
+            font-size: 0.9rem;
+            color: #1d2b41;
+            margin: 0.5rem 0 0.2rem;
+            display: none;
+        }
+        .download-message.show {
+            display: block;
+        }
+
+        /* ----- ALT WARNING ----- */
+        .alt-warning {
+            background: #fde8e8;
+            border-left: 4px solid #c53e3e;
+            padding: 0.7rem 1rem;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            color: #7a2626;
+            margin: 1rem 0 0.2rem;
+            display: none;
+        }
+        .alt-warning.show {
+            display: block;
+        }
+        .alt-warning strong {
+            color: #a12626;
+        }
+
+        /* ----- TOAST ----- */
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1d2b41;
+            color: #fff;
+            padding: 0.8rem 1.8rem;
+            border-radius: 40px;
+            font-size: 0.95rem;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+            z-index: 2000;
+            max-width: 90%;
+            text-align: center;
+        }
+        .toast.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .toast.error {
+            background: #b13a3a;
+        }
+        .toast.success {
+            background: #0f973d;
+        }
+        .toast.warning {
+            background: #b87a2a;
+        }
+
+        .loader-dots-small {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top-color: #fff;
             border-radius: 50%;
-            animation: spin 0.9s linear infinite;
+            animation: spin 0.7s linear infinite;
+            vertical-align: middle;
+            margin-right: 8px;
         }
         @keyframes spin {
             to {
                 transform: rotate(360deg);
             }
         }
-        #loading span {
-            font-size: 16px;
-            font-weight: 300;
-            color: #94a3b8;
-        }
 
-        /* ----- ERROR ----- */
-        #error-msg {
-            position: absolute;
-            bottom: 120px;
-            left: 50%;
-            transform: translateX(-50%);
-            color: #fbbf24;
-            background: rgba(0, 0, 0, 0.85);
-            padding: 14px 28px;
-            border-radius: 12px;
-            font-size: 15px;
-            display: none;
-            z-index: 30;
-            border: 1px solid rgba(251, 191, 36, 0.3);
-            text-align: center;
-            max-width: 90%;
-            backdrop-filter: blur(4px);
-        }
-        #retry-btn {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            padding: 16px 44px;
-            font-size: 20px;
-            font-weight: 700;
-            background: linear-gradient(135deg, #f43f5e, #ec4899);
-            color: #fff;
-            border: none;
-            border-radius: 50px;
-            cursor: pointer;
-            display: none;
-            z-index: 25;
-            box-shadow: 0 0 30px rgba(236, 72, 153, 0.5);
-            transition: 0.3s;
-        }
-        #retry-btn:hover {
-            transform: scale(1.05);
-            box-shadow: 0 0 50px rgba(236, 72, 153, 0.7);
-        }
-
-        /* ----- TOP CONTROLS (Skip + Sound + Download small) ----- */
-        .top-controls {
-            position: absolute;
-            top: 24px;
-            right: 24px;
-            display: none;
-            align-items: center;
-            gap: 12px;
-            background: rgba(0, 0, 0, 0.7);
-            padding: 10px 18px;
-            border-radius: 50px;
-            z-index: 15;
-            backdrop-filter: blur(8px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            pointer-events: none;
-            flex-wrap: wrap;
-            justify-content: flex-end;
-        }
-        .top-controls * {
-            pointer-events: auto;
-        }
-        .top-controls .ad-countdown {
-            color: #e2e8f0;
-            font-weight: 500;
-            font-size: 15px;
-            min-width: 70px;
-            text-align: center;
-        }
-        .top-controls .ad-skip-btn {
-            padding: 6px 20px;
-            border-radius: 40px;
-            border: 1px solid rgba(255, 255, 255, 0.25);
-            background: rgba(255, 255, 255, 0.08);
-            color: #f1f5f9;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 14px;
-            transition: 0.2s;
-        }
-        .top-controls .ad-skip-btn:disabled {
-            opacity: 0.35;
-            cursor: not-allowed;
-        }
-        .top-controls .ad-skip-btn:hover:not(:disabled) {
-            background: rgba(255, 255, 255, 0.18);
-            border-color: #fff;
-        }
-        .top-controls .sound-btn {
-            padding: 6px 12px;
-            border-radius: 40px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            background: rgba(255, 255, 255, 0.08);
-            color: #f1f5f9;
-            cursor: pointer;
-            font-size: 20px;
-            transition: 0.2s;
-            min-width: 40px;
-            text-align: center;
-            line-height: 1;
-        }
-        .top-controls .sound-btn:hover {
-            background: rgba(255, 255, 255, 0.18);
-            border-color: rgba(255, 255, 255, 0.4);
-        }
-        .top-controls .btn-download-small {
-            padding: 6px 16px;
-            border-radius: 40px;
-            border: none;
-            background: linear-gradient(135deg, #22c55e, #16a34a);
-            color: #fff;
-            font-weight: 700;
-            font-size: 13px;
-            cursor: pointer;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            transition: 0.2s;
-            box-shadow: 0 2px 12px rgba(34, 197, 94, 0.3);
-        }
-        .top-controls .btn-download-small:hover {
-            transform: scale(1.05);
-            box-shadow: 0 4px 18px rgba(34, 197, 94, 0.4);
-        }
-
-        /* ----- BOTTOM BAR (Big Download) ----- */
-        #bottom-bar {
-            height: 80px;
-            min-height: 80px;
-            background: #111118;
-            border-top: 1px solid rgba(255, 255, 255, 0.06);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 0 20px;
-        }
-        .btn-download-big {
-            padding: 14px 48px;
-            border-radius: 50px;
-            border: none;
-            font-size: 18px;
-            font-weight: 700;
-            cursor: pointer;
-            text-decoration: none;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            background: linear-gradient(135deg, #22c55e, #16a34a);
-            color: #fff;
-            box-shadow: 0 6px 24px rgba(34, 197, 94, 0.35);
-            transition: 0.25s ease;
-            letter-spacing: 0.5px;
-        }
-        .btn-download-big:hover {
-            transform: scale(1.04);
-            box-shadow: 0 8px 32px rgba(34, 197, 94, 0.5);
-            background: linear-gradient(135deg, #2dd55e, #15803d);
-        }
-        .btn-download-big:active {
-            transform: scale(0.95);
-        }
-
-        /* ----- TRACKING BADGE ----- */
-        #tracking-badge {
-            position: absolute;
-            bottom: 80px;
-            left: 20px;
-            color: #22c55e;
-            font-size: 13px;
-            font-weight: 600;
-            background: rgba(0, 0, 0, 0.75);
-            padding: 5px 14px;
-            border-radius: 30px;
-            z-index: 15;
-            display: none;
-            backdrop-filter: blur(4px);
-            border: 1px solid rgba(34, 197, 94, 0.3);
-            align-items: center;
-            gap: 6px;
-        }
-        #tracking-badge .dot {
-            display: inline-block;
-            width: 8px;
-            height: 8px;
-            background: #22c55e;
-            border-radius: 50%;
-            animation: pulse-dot 1.5s ease-in-out infinite;
-        }
-        @keyframes pulse-dot {
-            0%,
-            100% {
-                opacity: 1;
-                transform: scale(1);
+        @media (max-width: 480px) {
+            .card {
+                padding: 1.5rem;
             }
-            50% {
-                opacity: 0.3;
-                transform: scale(0.7);
+            .bonus-box {
+                flex-direction: column;
+                gap: 0.2rem;
             }
-        }
-
-        /* ----- RESPONSIVE ----- */
-        @media (max-width: 600px) {
-            #play-btn {
-                padding: 16px 36px;
-                font-size: 22px;
+            .bonus-total {
+                margin-left: 0;
             }
-            .btn-download-big {
-                padding: 12px 32px;
-                font-size: 16px;
+            .header h1 {
+                font-size: 1.4rem;
             }
-            #bottom-bar {
-                height: 74px;
-                min-height: 74px;
+            .btn-google {
+                font-size: 0.9rem;
+                padding: 0.7rem;
             }
-            .top-controls {
-                top: 12px;
-                right: 12px;
-                padding: 8px 14px;
-                gap: 8px;
+            .app-title {
+                font-size: 26px;
             }
-            .top-controls .ad-countdown {
-                font-size: 13px;
-                min-width: 55px;
+            .logo-icon {
+                font-size: 56px;
             }
-            .top-controls .ad-skip-btn {
-                font-size: 13px;
-                padding: 5px 14px;
-            }
-            .top-controls .btn-download-small {
-                font-size: 12px;
-                padding: 5px 12px;
-            }
-            .top-controls .sound-btn {
-                font-size: 17px;
-                padding: 5px 8px;
-                min-width: 34px;
-            }
-            #error-msg {
-                font-size: 13px;
-                padding: 10px 18px;
-                bottom: 100px;
-            }
-            #retry-btn {
-                padding: 12px 32px;
-                font-size: 17px;
-            }
-            #tracking-badge {
-                bottom: 70px;
-                left: 12px;
-                font-size: 11px;
-                padding: 4px 12px;
-            }
-            #debug-panel {
+            .loader-footer {
+                bottom: 20px;
                 font-size: 10px;
-                max-height: 120px;
             }
         }
     </style>
 </head>
 <body>
-    <div id="main">
-        <div id="ad-container">
-            <video id="ad-video" playsinline></video>
-            <div id="loading">
-                <div class="spinner"></div>
-                <span>Loading ad...</span>
+
+    <!-- ===== FULL SCREEN LOADING SCREEN (exactly like loading.html) ===== -->
+    <div id="loadingOverlay">
+        <div class="loader-container">
+            <div class="logo-icon"><i class="fas fa-tasks"></i></div>
+            <div class="app-title">Task Expert</div>
+            <div class="app-subtitle">Earn Coins • Complete Tasks</div>
+            <div class="loader-wrapper">
+                <div class="loader-ring"></div>
+                <div class="loader-bar-track">
+                    <div class="loader-bar-fill" id="loaderBarFill"></div>
+                </div>
+                <div class="loader-status" id="loaderStatus">
+                    <i class="fas fa-circle" style="color:#38ef7d;font-size:8px;margin-right:4px;"></i> Connecting…
+                </div>
+                <div class="loader-dots">
+                    <span></span><span></span><span></span>
+                </div>
             </div>
-            <button id="play-btn">▶ Play Ad</button>
-            <button id="retry-btn">🔄 Retry</button>
-            <div id="error-msg"></div>
+            <div class="loader-footer">v1.0</div>
+        </div>
+    </div>
 
-            <!-- Top Controls -->
-            <div class="top-controls" id="top-controls">
-                <span class="ad-countdown" id="ad-countdown">Ad · 0s</span>
-                <button class="ad-skip-btn" id="ad-skip-btn" disabled>Skip ⏳</button>
-                <button class="sound-btn" id="sound-btn">🔊</button>
-                <a href="#" id="download-small" class="btn-download-small" target="_blank">⬇️ Download</a>
-            </div>
+    <!-- ===== TOAST ===== -->
+    <div id="toast" class="toast"></div>
 
-            <!-- Tracking Badge -->
-            <div id="tracking-badge"><span class="dot"></span> Tracking Active</div>
-
-            <!-- Debug Panel -->
-            <div id="debug-panel"></div>
-            <button id="debug-toggle">🐞 Show Debug</button>
+    <!-- ===== SIGN-UP CARD ===== -->
+    <div id="signupCard" class="card hidden">
+        <div class="download-top">
+            <a href="#" id="topDownloadLink" target="_blank"><i class="fas fa-download"></i> Download App</a>
         </div>
 
-        <!-- Bottom Bar -->
-        <div id="bottom-bar">
-            <a href="#" id="download-big" class="btn-download-big" target="_blank">⬇️ Download</a>
+        <div class="header">
+            <h1><i class="fas fa-tasks"></i> Task Expert</h1>
+            <p>Complete tasks • Earn coins • Grow daily</p>
+            <div class="sub"><i class="fas fa-google" style="color:#4285F4;"></i> Sign up with Google and start earning</div>
+        </div>
+
+        <div id="adminBanner" class="admin-banner">
+            <span class="label"><i class="fas fa-bullhorn"></i> Announcement</span>
+            <span id="bannerMessage">Welcome!</span>
+        </div>
+
+        <div class="bonus-box">
+            <span class="bonus-item"><i class="fas fa-gift"></i> Sign-up <span class="num" id="signupBonusDisplay">50</span></span>
+            <span class="bonus-item referral-hidden"><i class="fas fa-user-friends"></i> Referral <span class="num green" id="referralBonusDisplay">50</span></span>
+            <span class="bonus-total"><i class="fas fa-coins"></i> Total <span id="totalBonusDisplay">100</span></span>
+        </div>
+
+        <div class="form-group">
+            <label for="referralInput"><i class="fas fa-link"></i> Referral code <span style="font-weight:400;color:#7a8aa0;font-size:0.8rem;">(auto‑filled from link)</span></label>
+            <input type="text" id="referralInput" placeholder="No referral code" maxlength="6" disabled />
+            <div class="hint"><i class="fas fa-info-circle"></i> If you came from a referral link, the code is already set.</div>
+        </div>
+
+        <button class="btn-google" id="googleBtn">
+            <svg viewBox="0 0 48 48"><path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 12.955 4 4 12.955 4 24s8.955 20 20 20 20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z"/><path fill="#FF3D00" d="m6.306 14.691 6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 16.318 4 9.656 8.337 6.306 14.691z"/><path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238A11.91 11.91 0 0 1 24 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z"/><path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303a12.04 12.04 0 0 1-4.087 5.571l.003-.002 6.19 5.238C36.971 39.205 44 34 44 24c0-1.341-.138-2.65-.389-3.917z"/></svg>
+            Sign up with Google
+        </button>
+
+        <div style="text-align:center;font-size:0.75rem;color:#8a9bb0;margin-top:1rem;">
+            <i class="fas fa-shield-alt" style="color:#1a4a7a;"></i> Secure • No password needed
+            <span style="display:block;font-size:0.7rem;margin-top:2px;color:#aabbcc;">
+                Your username will be taken from your Gmail address
+            </span>
+        </div>
+    </div>
+
+    <!-- ===== SUCCESS CARD ===== -->
+    <div id="successCard" class="card hidden">
+        <div class="success-icon">🎉</div>
+        <div class="success-title">You're in!</div>
+        <div class="success-sub">Your Task Expert account is ready.</div>
+
+        <div id="successAdminBanner" class="admin-banner">
+            <span class="label"><i class="fas fa-bullhorn"></i> Announcement</span>
+            <span id="successBannerMessage">Welcome!</span>
+        </div>
+
+        <div id="altWarning" class="alt-warning">
+            <strong>⚠️ Multiple accounts detected.</strong><br />
+            This account has been flagged as an alternate account. Some features may be restricted.
+        </div>
+
+        <div class="coin-breakdown">
+            <div class="row"><span><i class="fas fa-gift" style="color:#f9a825;"></i> Sign-up bonus</span><span class="val" id="breakSignup">+50</span></div>
+            <div class="row"><span><i class="fas fa-user-friends" style="color:#0f973d;"></i> Referral bonus</span><span class="val" id="breakReferral">+0</span></div>
+            <div class="row total"><span><i class="fas fa-coins" style="color:#f9a825;"></i> Total coins earned</span><span class="val" id="breakTotal">50</span></div>
+        </div>
+
+        <a href="#" id="downloadBtn" class="btn-download" target="_blank"><i class="fas fa-download"></i> Download App</a>
+
+        <div id="downloadPageMessage" class="download-message">
+            <span id="downloadPageText">Get the app for the best experience!</span>
+        </div>
+
+        <div style="background:#f0f6fe;border-radius:12px;padding:0.8rem 1rem;margin-top:0.8rem;">
+            <div style="font-size:0.8rem;font-weight:600;color:#1d2b41;margin-bottom:4px;">
+                <i class="fas fa-share-alt"></i> Your referral link
+            </div>
+            <div style="display:flex;gap:6px;align-items:center;background:white;border-radius:30px;padding:3px 3px 3px 14px;border:1px solid #dce3ed;">
+                <input type="text" id="shareLinkInput" readonly style="flex:1;border:none;outline:none;font-size:0.85rem;color:#1e3c72;background:transparent;font-family:'Courier New',monospace;min-width:0;" />
+                <button onclick="copyShareLink()" style="background:#1a3a6a;color:white;border:none;border-radius:30px;padding:6px 16px;font-size:0.8rem;font-weight:600;cursor:pointer;white-space:nowrap;transition:0.2s;">
+                    <i class="fas fa-copy"></i> Copy
+                </button>
+            </div>
+        </div>
+
+        <div style="text-align:center;font-size:0.75rem;color:#8a9bb0;margin-top:0.8rem;">
+            <i class="fas fa-check-circle" style="color:#0f973d;"></i> You can close this page and return anytime.
         </div>
     </div>
 
     <script>
-        /**
-         * ================================================================
-         * 🔥 NEW VAST URL ADDED (Direct URL – Bypasses API)
-         * ================================================================
-         */
-        // 👇 DIRECT VAST URL (New URL added here)
-        const DIRECT_VAST_URL = 'https://difficultblock.com/dim.FtzYd/G/NavYZFGXUY/Pe/mM9/ulZGU-l/k/PoTScQyYNTTkMLy/NOTEcCtqNTzgIv1hMCzTIK2rM/QB';
+        // ================================================================
+        //  FIREBASE CONFIG
+        // ================================================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyAFlpqi5e3EI1loNu3QWFLOMBjfYyyAusk",
+            authDomain: "taskexpert7.firebaseapp.com",
+            databaseURL: "https://taskexpert7-default-rtdb.firebaseio.com",
+            projectId: "taskexpert7",
+            storageBucket: "taskexpert7.firebasestorage.app",
+            messagingSenderId: "112187780941",
+            appId: "1:112187780941:web:a9ed957d2538847cd01104",
+            measurementId: "G-6FP0RJSQD6"
+        };
 
-        // 👇 API Credentials (kept for fallback)
-        const API_KEY = 'X1aAiDm6f90fSlRhO4KKPpokMkWAXenGiAME1kmwBguVfVvTdtMHO3wWWL4puddV';
-        const ZONE_ID = '7253257';
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.database();
 
-        // ===== USE DIRECT VAST URL (Set to true to use direct URL) =====
-        const USE_DIRECT_VAST = true; // true = direct URL, false = API proxy
+        auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
+            .catch(e => console.warn('Persistence error:', e));
 
-        const DEFAULT_CTA = 'https://google.com';
-        const SKIP_DELAY = 15;
+        // ================================================================
+        //  CONSTANTS
+        // ================================================================
+        const DOWNLOAD_APK_LINK = 'https://github.com/hadier555/taskexpertapk/releases/download/v1.0/Task.Expert.apk';
 
-        // ===== DOM refs =====
-        const video = document.getElementById('ad-video');
-        const main = document.getElementById('main');
-        const playBtn = document.getElementById('play-btn');
-        const retryBtn = document.getElementById('retry-btn');
-        const errorMsg = document.getElementById('error-msg');
-        const loading = document.getElementById('loading');
-        const topControls = document.getElementById('top-controls');
-        const countdown = document.getElementById('ad-countdown');
-        const skipBtn = document.getElementById('ad-skip-btn');
-        const soundBtn = document.getElementById('sound-btn');
-        const downloadSmall = document.getElementById('download-small');
-        const downloadBig = document.getElementById('download-big');
-        const trackingBadge = document.getElementById('tracking-badge');
-        const debugPanel = document.getElementById('debug-panel');
-        const debugToggle = document.getElementById('debug-toggle');
+        const DEFAULTS = {
+            signupBonus: 50,
+            referralBonus: 50,
+            bannerMessage: 'Welcome to Task Expert!',
+            downloadPageMessage: 'Get the app and start earning more!'
+        };
 
-        // ===== State =====
-        let isAdPlaying = false;
-        let skipInterval = null;
-        let currentClickUrl = '';
-        let isMuted = false;
-        let impressionUrls = [];
-        let impressionsFired = false;
+        // ================================================================
+        //  DOM REFS
+        // ================================================================
+        const $ = id => document.getElementById(id);
 
-        // ===== DEBUG LOGGING =====
-        let debugVisible = false;
+        const loadingOverlay = $('loadingOverlay');
+        const progressBar = $('loaderBarFill');
+        const loaderStatus = $('loaderStatus');
+        const signupCard = $('signupCard');
+        const successCard = $('successCard');
+        const toast = $('toast');
 
-        function logToScreen(msg, type) {
-            type = type || 'info';
-            const div = document.createElement('div');
-            div.className = 'log-line log-' + type;
-            div.textContent = '> ' + msg;
-            debugPanel.appendChild(div);
-            debugPanel.scrollTop = debugPanel.scrollHeight;
-            if (!debugVisible) {
-                debugPanel.style.display = 'block';
-                debugToggle.textContent = '🐞 Hide Debug';
-                debugVisible = true;
+        const referralInput = $('referralInput');
+        const googleBtn = $('googleBtn');
+
+        const signupBonusDisplay = $('signupBonusDisplay');
+        const totalBonusDisplay = $('totalBonusDisplay');
+
+        const adminBanner = $('adminBanner');
+        const bannerMessage = $('bannerMessage');
+        const successAdminBanner = $('successAdminBanner');
+        const successBannerMessage = $('successBannerMessage');
+
+        const topDownloadLink = $('topDownloadLink');
+        const downloadBtn = $('downloadBtn');
+        const downloadPageMessage = $('downloadPageMessage');
+        const downloadPageText = $('downloadPageText');
+
+        const altWarning = $('altWarning');
+        const breakSignup = $('breakSignup');
+        const breakReferral = $('breakReferral');
+        const breakTotal = $('breakTotal');
+        const shareLinkInput = $('shareLinkInput');
+
+        // ================================================================
+        //  LOADING PROGRESS HELPER
+        // ================================================================
+        let progress = 0;
+
+        function updateProgress(value, status) {
+            progress = Math.min(value, 100);
+            progressBar.style.width = progress + '%';
+            if (status) {
+                loaderStatus.innerHTML = status;
             }
-            console.log('[VAST]', msg);
         }
 
-        debugToggle.addEventListener('click', function() {
-            if (debugVisible) {
-                debugPanel.style.display = 'none';
-                debugToggle.textContent = '🐞 Show Debug';
-                debugVisible = false;
+        // ================================================================
+        //  TOAST
+        // ================================================================
+        let toastTimer = null;
+
+        function showToast(msg, type = 'info', duration = 3500) {
+            toast.textContent = msg;
+            toast.className = 'toast';
+            if (type === 'error') toast.classList.add('error');
+            if (type === 'success') toast.classList.add('success');
+            if (type === 'warning') toast.classList.add('warning');
+            toast.classList.add('show');
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => toast.classList.remove('show'), duration);
+        }
+
+        // ================================================================
+        //  STATE
+        // ================================================================
+        let settings = { ...DEFAULTS };
+        let isSigningUp = false;
+        let referralCodeFromURL = null;
+
+        // ================================================================
+        //  FETCH SETTINGS (ONLY WHAT'S NEEDED)
+        // ================================================================
+        function fetchSettings() {
+            updateProgress(25, '<i class="fas fa-circle" style="color:#38ef7d;font-size:8px;margin-right:4px;"></i> Loading settings…');
+            return db.ref('settings').once('value')
+                .then(snap => {
+                    const data = snap.val() || {};
+                    settings = {
+                        signupBonus: data.signupBonus ?? DEFAULTS.signupBonus,
+                        referralBonus: data.referralBonus ?? DEFAULTS.referralBonus,
+                        bannerMessage: data.bannerMessage?.message ?? DEFAULTS.bannerMessage,
+                        bannerEnabled: data.bannerMessage?.enabled ?? false,
+                        downloadPageMessage: data.downloadPageMessage?.message ?? DEFAULTS
+                            .downloadPageMessage,
+                        downloadPageEnabled: data.downloadPageMessage?.enabled ?? false,
+                    };
+                    updateProgress(50, '<i class="fas fa-circle" style="color:#38ef7d;font-size:8px;margin-right:4px;"></i> Settings loaded');
+                    applySettings();
+                })
+                .catch(err => {
+                    console.warn('Settings fetch failed, using defaults.', err);
+                    updateProgress(50, '<i class="fas fa-exclamation-triangle" style="color:#f9a825;margin-right:4px;"></i> Using default settings');
+                    applySettings();
+                });
+        }
+
+        function applySettings() {
+            signupBonusDisplay.textContent = settings.signupBonus;
+            totalBonusDisplay.textContent = settings.signupBonus;
+
+            // Hardcoded download link – admin cannot change
+            topDownloadLink.href = DOWNLOAD_APK_LINK;
+            downloadBtn.href = DOWNLOAD_APK_LINK;
+            downloadBtn.classList.remove('disabled');
+
+            if (settings.bannerEnabled && settings.bannerMessage) {
+                bannerMessage.textContent = settings.bannerMessage;
+                adminBanner.classList.add('show');
+                successBannerMessage.textContent = settings.bannerMessage;
+                successAdminBanner.classList.add('show');
             } else {
-                debugPanel.style.display = 'block';
-                debugToggle.textContent = '🐞 Hide Debug';
-                debugVisible = true;
+                adminBanner.classList.remove('show');
+                successAdminBanner.classList.remove('show');
             }
-        });
 
-        // ===== VIDEO & AUDIO =====
-        video.muted = false;
-        soundBtn.textContent = '🔊';
-
-        function showError(msg, showRetry) {
-            showRetry = showRetry || false;
-            errorMsg.style.display = 'block';
-            errorMsg.textContent = '⚠️ ' + msg;
-            retryBtn.style.display = showRetry ? 'block' : 'none';
-            logToScreen('ERROR: ' + msg, 'error');
-        }
-
-        function hideError() {
-            errorMsg.style.display = 'none';
-            retryBtn.style.display = 'none';
-        }
-
-        function showLoading(show) {
-            loading.style.display = show ? 'flex' : 'none';
-        }
-
-        function showControls(show) {
-            topControls.style.display = show ? 'flex' : 'none';
-        }
-
-        function toggleSound() {
-            video.muted = !video.muted;
-            isMuted = video.muted;
-            soundBtn.textContent = isMuted ? '🔇' : '🔊';
-        }
-        soundBtn.addEventListener('click', toggleSound);
-
-        // ===== 🔥 IMPRESSION FIRE =====
-        function fireImpressions() {
-            if (impressionsFired) return;
-            impressionsFired = true;
-
-            logToScreen('🔥 FIRING ' + impressionUrls.length + ' IMPRESSION(S)', 'success');
-            trackingBadge.style.display = 'flex';
-
-            impressionUrls.forEach(function(url, index) {
-                if (url) {
-                    var finalUrl = url;
-                    if (finalUrl.indexOf('?') === -1) {
-                        finalUrl += '?';
-                    } else {
-                        finalUrl += '&';
-                    }
-                    finalUrl += 'cachebuster=' + Date.now() +
-                        '&ref=' + encodeURIComponent(window.location.href);
-
-                    logToScreen('  ➜ URL ' + (index + 1) + ': ' + finalUrl.substring(0, 80) + '...', 'info');
-
-                    var img = new Image();
-                    img.src = finalUrl;
-
-                    if (navigator.sendBeacon) {
-                        navigator.sendBeacon(finalUrl);
-                    }
-                }
-            });
-            logToScreen('✅ Impression requests sent! Dashboard updates in 10-15 min.', 'success');
-        }
-
-        // ===== RESET =====
-        function resetPlayer() {
-            isAdPlaying = false;
-            impressionsFired = false;
-            impressionUrls = [];
-            clearInterval(skipInterval);
-            video.pause();
-            video.removeAttribute('src');
-            video.load();
-            showControls(false);
-            skipBtn.disabled = true;
-            skipBtn.textContent = 'Skip ⏳';
-            countdown.textContent = 'Ad · 0s';
-            playBtn.style.display = 'block';
-            playBtn.textContent = '▶ Play Ad';
-            hideError();
-            showLoading(false);
-            downloadSmall.style.display = 'none';
-            downloadBig.style.display = 'none';
-            trackingBadge.style.display = 'none';
-            video.muted = false;
-            isMuted = false;
-            soundBtn.textContent = '🔊';
-            video.onplay = null;
-            video.onerror = null;
-            video.ontimeupdate = null;
-            if (debugPanel.children.length > 30) {
-                while (debugPanel.children.length > 20) {
-                    debugPanel.removeChild(debugPanel.firstChild);
-                }
+            if (settings.downloadPageEnabled && settings.downloadPageMessage) {
+                downloadPageText.textContent = settings.downloadPageMessage;
+                downloadPageMessage.classList.add('show');
+            } else {
+                downloadPageMessage.classList.remove('show');
             }
         }
 
-        // ===== PARSE VAST XML =====
-        function parseVASTAndPlay(xmlString) {
-            // 🔥 Trim whitespace to avoid parsing issues
-            xmlString = xmlString.trim();
+        // ================================================================
+        //  REFERRAL FROM URL
+        // ================================================================
+        function getReferralFromURL() {
+            const params = new URLSearchParams(window.location.search);
+            return params.get('ref') || params.get('referral') || params.get('referrer') || null;
+        }
 
-            logToScreen('📄 Parsing VAST XML...', 'info');
+        referralCodeFromURL = getReferralFromURL();
+        if (referralCodeFromURL) {
+            referralInput.value = referralCodeFromURL;
+            referralInput.disabled = true;
+            referralInput.style.color = '#1e3c72';
+            referralInput.style.fontWeight = '600';
+            referralInput.placeholder = 'Referral code locked';
+        } else {
+            referralInput.value = '';
+            referralInput.disabled = true;
+            referralInput.placeholder = 'No referral code';
+        }
+
+        // ================================================================
+        //  EXTRACT USERNAME
+        // ================================================================
+        function getUsernameFromEmail(email) {
+            if (!email) return 'user';
+            const atIndex = email.indexOf('@');
+            return atIndex > 0 ? email.substring(0, atIndex) : email;
+        }
+
+        // ================================================================
+        //  CREATE USER – ONLY NEW USER DATA
+        // ================================================================
+        async function createUserRecord(user, referralCode) {
+            const uid = user.uid;
+            const email = user.email || '';
+            const username = getUsernameFromEmail(email);
+
+            const existing = await db.ref(`users/${uid}`).once('value');
+            if (existing.exists()) {
+                throw new Error('This Google account is already registered. Please use a different account.');
+            }
+
+            let referredBy = null;
+            let referralBonusEarned = 0;
+
+            if (referralCode && referralCode.length === 6) {
+                const usersSnap = await db.ref('users')
+                    .orderByChild('referralCode')
+                    .equalTo(referralCode)
+                    .once('value');
+                const users = usersSnap.val() || {};
+                const entries = Object.entries(users);
+                if (entries.length > 0) {
+                    const [refUid] = entries[0];
+                    if (refUid !== uid) {
+                        referredBy = refUid;
+                        referralBonusEarned = settings.referralBonus;
+                    }
+                }
+            }
+
+            let newRefCode = '';
+            let attempts = 0;
+            while (attempts < 20) {
+                const code = String(Math.floor(100000 + Math.random() * 900000));
+                const exists = await db.ref('users')
+                    .orderByChild('referralCode')
+                    .equalTo(code)
+                    .once('value');
+                if (!exists.exists()) {
+                    newRefCode = code;
+                    break;
+                }
+                attempts++;
+            }
+            if (!newRefCode) newRefCode = String(Math.floor(100000 + Math.random() * 900000));
+
+            const signupBonus = settings.signupBonus;
+            const totalCoins = signupBonus;
+
+            const userData = {
+                username,
+                email,
+                coins: totalCoins,
+                totalEarned: totalCoins,
+                todayEarned: totalCoins,
+                pendingEarnings: 0,
+                approvedEarnings: 0,
+                referrals: [],
+                totalReferrals: 0,
+                referralEarnings: 0,
+                referralCode: newRefCode,
+                referredBy,
+                suspended: false,
+                spinsToday: 0,
+                lastSpinDate: new Date().toISOString().slice(0, 10),
+                dailyReward: { lastClaim: null, day: 0 },
+                depositCoins: 0,
+                nonWithdrawableCoins: 0,
+                createdAt: Date.now(),
+                authProvider: 'google',
+                alt_account: false,
+                alt_account_details: null,
+                deviceId: null,
+                ip: null,
+                deviceData: {
+                    userAgent: navigator.userAgent,
+                    screen: `${window.screen.width}x${window.screen.height}`,
+                    language: navigator.language,
+                    platform: navigator.platform,
+                    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                    firstSeen: Date.now(),
+                    lastSeen: Date.now()
+                }
+            };
+
+            await db.ref(`users/${uid}`).set(userData);
+
+            if (referredBy) {
+                const refSnap = await db.ref(`users/${referredBy}`).once('value');
+                const referrerData = refSnap.val() || {};
+                const refUpdates = {};
+                const referrals = referrerData.referrals || [];
+                referrals.push(uid);
+                refUpdates[`users/${referredBy}/referrals`] = referrals;
+                refUpdates[`users/${referredBy}/totalReferrals`] = (referrerData.totalReferrals || 0) + 1;
+                refUpdates[`users/${referredBy}/coins`] = (referrerData.coins || 0) + referralBonusEarned;
+                refUpdates[`users/${referredBy}/referralEarnings`] = (referrerData.referralEarnings || 0) +
+                    referralBonusEarned;
+                refUpdates[`users/${referredBy}/totalEarned`] = (referrerData.totalEarned || 0) +
+                    referralBonusEarned;
+                await db.ref().update(refUpdates);
+
+                await db.ref('referrals').push({
+                    referredBy,
+                    referredUserId: uid,
+                    referredUsername: username,
+                    timestamp: Date.now(),
+                    earnings: referralBonusEarned
+                });
+            }
+
+            const session = {
+                uid,
+                username,
+                email,
+                coins: totalCoins,
+                referralCode: newRefCode,
+                referredBy,
+                alt_account: false,
+                suspended: false,
+                createdAt: Date.now()
+            };
+            localStorage.setItem('taskExpertUser', JSON.stringify(session));
+
+            return { totalCoins, signupBonus, referralBonusEarned, newRefCode, username };
+        }
+
+        // ================================================================
+        //  GOOGLE SIGN-UP
+        // ================================================================
+        async function handleGoogleSignUp() {
+            if (isSigningUp) return;
+            const referralCode = referralInput.value.trim().replace(/\s/g, '');
+
+            isSigningUp = true;
+            googleBtn.disabled = true;
+            googleBtn.innerHTML = `<span class="loader-dots-small"></span> Signing up…`;
+
             try {
-                var parser = new DOMParser();
-                var xml = parser.parseFromString(xmlString, 'text/xml');
-                if (xml.querySelector('parsererror')) {
-                    showError('Invalid XML response', true);
-                    showLoading(false);
-                    playBtn.style.display = 'block';
-                    logToScreen('❌ XML parse error', 'error');
-                    return;
+                const provider = new firebase.auth.GoogleAuthProvider();
+                provider.setCustomParameters({ prompt: 'select_account' });
+                const result = await auth.signInWithPopup(provider);
+                const user = result.user;
+
+                const { totalCoins, signupBonus: sBonus, newRefCode, username } = await createUserRecord(
+                    user, referralCode);
+
+                showSuccess(totalCoins, sBonus, 0, false, newRefCode, username);
+                showToast('✅ Account created successfully!', 'success', 3000);
+
+            } catch (err) {
+                console.error('Sign-up error:', err);
+                let msg = err.message || 'Something went wrong. Please try again.';
+                if (msg.includes('already registered')) {
+                    msg = 'This Google account is already registered. Please use a different account.';
+                    await auth.signOut();
                 }
-                logToScreen('✅ VAST XML parsed successfully', 'success');
-
-                // ---- 1. Get Video URL ----
-                var mediaFiles = xml.querySelectorAll('MediaFile');
-                var videoUrl = null;
-                for (var i = 0; i < mediaFiles.length; i++) {
-                    var node = mediaFiles[i];
-                    var type = node.getAttribute('type') || '';
-                    var url = node.textContent.trim();
-                    if (!url) {
-                        url = node.getAttribute('src') || node.getAttribute('url') || '';
-                    }
-                    if (url && (type.indexOf('mp4') !== -1 || type.indexOf('video/mp4') !== -1)) {
-                        videoUrl = url;
-                        break;
-                    }
-                }
-                if (!videoUrl) {
-                    for (var j = 0; j < mediaFiles.length; j++) {
-                        var n = mediaFiles[j];
-                        var t = n.getAttribute('type') || '';
-                        var u = n.textContent.trim();
-                        if (!u) {
-                            u = n.getAttribute('src') || n.getAttribute('url') || '';
-                        }
-                        if (u && t.indexOf('video') !== -1) {
-                            videoUrl = u;
-                            break;
-                        }
-                    }
-                }
-                if (!videoUrl) {
-                    showError('No MP4 video found in VAST', true);
-                    showLoading(false);
-                    playBtn.style.display = 'block';
-                    logToScreen('❌ No video URL in VAST', 'error');
-                    return;
-                }
-                logToScreen('✅ Video URL found: ' + videoUrl.substring(0, 60) + '...', 'success');
-
-                // ---- 2. Get ClickThrough ----
-                currentClickUrl = '';
-                var clickNode = xml.querySelector('ClickThrough');
-                if (clickNode) {
-                    currentClickUrl = clickNode.textContent.trim();
-                }
-                logToScreen('✅ ClickThrough URL found: ' + (currentClickUrl ? 'Yes' : 'No'), 'info');
-
-                // ---- 3. Get Impression URLs ----
-                impressionUrls = [];
-                var impNodes = xml.querySelectorAll('Impression');
-                for (var k = 0; k < impNodes.length; k++) {
-                    var u2 = impNodes[k].textContent.trim();
-                    if (u2) {
-                        impressionUrls.push(u2);
-                    }
-                }
-                var inlineImp = xml.querySelector('InLine Impression');
-                if (inlineImp) {
-                    var u3 = inlineImp.textContent.trim();
-                    if (u3 && impressionUrls.indexOf(u3) === -1) {
-                        impressionUrls.push(u3);
-                    }
-                }
-                logToScreen('✅ Found ' + impressionUrls.length + ' Impression URL(s)', 'success');
-                if (impressionUrls.length > 0) {
-                    logToScreen('  ➜ ' + impressionUrls[0].substring(0, 80) + '...', 'info');
-                }
-
-                impressionsFired = false;
-                showLoading(false);
-
-                // ---- Load video ----
-                video.src = videoUrl;
-                video.muted = false;
-                isMuted = false;
-                soundBtn.textContent = '🔊';
-
-                video.load();
-                var playPromise = video.play();
-                if (playPromise !== undefined) {
-                    playPromise
-                        .then(function() {
-                            logToScreen('▶ Video playing', 'success');
-                            isAdPlaying = true;
-                            showControls(true);
-                            startSkipTimer();
-
-                            var impressionTimeout = setTimeout(function() {
-                                fireImpressions();
-                            }, 1000);
-
-                            video.ontimeupdate = function() {
-                                if (video.currentTime >= 1 && !impressionsFired) {
-                                    clearTimeout(impressionTimeout);
-                                    fireImpressions();
-                                    video.ontimeupdate = null;
-                                }
-                            };
-                        })
-                        .catch(function(err) {
-                            logToScreen('❌ Play error: ' + err.message, 'error');
-                            showError('Tap to play video', true);
-                            showLoading(false);
-                            playBtn.style.display = 'block';
-                            playBtn.textContent = '▶ Tap to Play';
-                            playBtn.onclick = function() {
-                                video.play().catch(function() {});
-                                playBtn.style.display = 'none';
-                                showLoading(true);
-                            };
-                        });
-                }
-
-                video.onended = function() {
-                    logToScreen('⏹ Video ended', 'info');
-                    finishAd();
-                };
-
-                video.onerror = function() {
-                    var errMsg = video.error ? video.error.message : 'unknown';
-                    logToScreen('❌ Video error: ' + errMsg, 'error');
-                    showError('Video error. Retry?', true);
-                    showLoading(false);
-                    playBtn.style.display = 'block';
-                };
-
-                var link = currentClickUrl || DEFAULT_CTA;
-                downloadSmall.href = link;
-                downloadSmall.style.display = 'inline-flex';
-                downloadBig.href = link;
-                downloadBig.style.display = 'inline-flex';
-
-                playBtn.style.display = 'none';
-
-                if (!document.fullscreenElement) {
-                    main.requestFullscreen().catch(function() {});
-                }
-
-            } catch (e) {
-                logToScreen('❌ Exception: ' + e.message, 'error');
-                showError('Parse error: ' + e.message, true);
-                showLoading(false);
-                playBtn.style.display = 'block';
+                showToast('❌ ' + msg, 'error', 5000);
+            } finally {
+                isSigningUp = false;
+                googleBtn.disabled = false;
+                googleBtn.innerHTML = `
+                    <svg viewBox="0 0 48 48"><path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 12.955 4 4 12.955 4 24s8.955 20 20 20 20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z"/><path fill="#FF3D00" d="m6.306 14.691 6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 16.318 4 9.656 8.337 6.306 14.691z"/><path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238A11.91 11.91 0 0 1 24 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z"/><path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303a12.04 12.04 0 0 1-4.087 5.571l.003-.002 6.19 5.238C36.971 39.205 44 34 44 24c0-1.341-.138-2.65-.389-3.917z"/></svg>
+                    Sign up with Google
+                `;
             }
         }
 
-        // ===== FETCH DIRECT VAST URL =====
-        function fetchDirectVAST() {
-            logToScreen('🌐 Fetching Direct VAST URL...', 'info');
-            logToScreen('  ➜ ' + DIRECT_VAST_URL.substring(0, 80) + '...', 'info');
+        // ================================================================
+        //  SHOW SUCCESS
+        // ================================================================
+        function showSuccess(total, signup, referral, duplicateMatch, refCode, username) {
+            signupCard.classList.add('hidden');
+            successCard.classList.remove('hidden');
+            successCard.classList.add('visible');
 
-            return fetch(DIRECT_VAST_URL, { mode: 'cors' })
-                .then(function(r) {
-                    if (!r.ok) throw new Error('HTTP ' + r.status);
-                    return r.text();
-                })
-                .then(function(xml) {
-                    logToScreen('✅ Direct VAST fetched (' + xml.length + ' chars)', 'success');
-                    return xml;
-                });
+            breakSignup.textContent = `+${signup}`;
+            breakReferral.textContent = `+0`;
+            breakTotal.textContent = total;
+
+            altWarning.classList.toggle('show', !!duplicateMatch);
+
+            const baseUrl = window.location.origin + window.location.pathname;
+            shareLinkInput.value = refCode ? `${baseUrl}?ref=${encodeURIComponent(refCode)}` : baseUrl;
+
+            const subEl = document.querySelector('.success-sub');
+            if (subEl && username) {
+                subEl.textContent = `Welcome, ${username}! Your Task Expert account is ready.`;
+            }
+
+            applySettings();
         }
 
-        // ===== FETCH VAST FROM API (Fallback) =====
-        function fetchVastFromAPI() {
-            const API_URL = 'https://difficultblock.com/api/publisher/inventory?api_key=' + API_KEY + '&zone_id=' + ZONE_ID;
-            logToScreen('🌐 Fetching VAST URL from API (fallback)...', 'info');
-            logToScreen('  ➜ API: ' + API_URL.substring(0, 80) + '...', 'info');
-
-            return fetch(API_URL, { mode: 'cors' })
-                .then(function(r) {
-                    if (!r.ok) throw new Error('HTTP ' + r.status);
-                    return r.text();
-                })
-                .then(function(text) {
-                    logToScreen('✅ API response (' + text.length + ' chars)', 'success');
-                    try {
-                        var json = JSON.parse(text);
-                        if (json && json.vast_url) {
-                            logToScreen('✅ vast_url from JSON: ' + json.vast_url.substring(0, 60) + '...', 'success');
-                            return json.vast_url;
-                        }
-                        if (text.trim().startsWith('http')) {
-                            logToScreen('✅ API returned raw URL', 'success');
-                            return text.trim();
-                        }
-                        if (text.trim().startsWith('<')) {
-                            logToScreen('📄 API returned XML directly, parsing...', 'info');
-                            parseVASTAndPlay(text);
-                            return null;
-                        }
-                        throw new Error('Unknown API response format');
-                    } catch (e) {
-                        if (text.trim().startsWith('http')) {
-                            logToScreen('✅ API returned raw URL (non-JSON)', 'success');
-                            return text.trim();
-                        }
-                        if (text.trim().startsWith('<')) {
-                            logToScreen('📄 API returned XML directly (non-JSON)', 'info');
-                            parseVASTAndPlay(text);
-                            return null;
-                        }
-                        throw new Error('Invalid API response: ' + text.substring(0, 100));
-                    }
-                });
-        }
-
-        // ===== FETCH VAST XML FROM URL =====
-        function fetchVastXML(vastUrl) {
-            logToScreen('🌐 Fetching VAST XML from URL...', 'info');
-            logToScreen('  ➜ ' + vastUrl.substring(0, 80) + '...', 'info');
-
-            return fetch(vastUrl, { mode: 'cors' })
-                .then(function(r) {
-                    if (!r.ok) throw new Error('HTTP ' + r.status);
-                    return r.text();
-                })
-                .then(function(xml) {
-                    logToScreen('✅ VAST XML fetched (' + xml.length + ' chars)', 'success');
-                    return xml;
-                });
-        }
-
-        // ===== MAIN FLOW =====
-        function fetchAndPlay() {
-            resetPlayer();
-            hideError();
-            showLoading(true);
-            playBtn.style.display = 'none';
-            playBtn.onclick = null;
-
-            // 🔥 Use DIRECT VAST URL (bypass proxy)
-            if (USE_DIRECT_VAST) {
-                logToScreen('📌 Using DIRECT VAST URL (proxy bypassed)', 'info');
-                fetchDirectVAST()
-                    .then(function(xml) {
-                        if (xml) {
-                            parseVASTAndPlay(xml);
-                        }
-                    })
-                    .catch(function(err) {
-                        logToScreen('❌ Error fetching direct VAST: ' + err.message, 'error');
-                        showError('Failed to load ad: ' + err.message, true);
-                        showLoading(false);
-                        playBtn.style.display = 'block';
-                    });
+        // ================================================================
+        //  COPY SHARE LINK
+        // ================================================================
+        function copyShareLink() {
+            const input = shareLinkInput;
+            if (!input.value || input.value === 'Loading…') {
+                showToast('⚠️ No link to copy yet', 'warning');
                 return;
             }
-
-            // Fallback: Use API proxy
-            logToScreen('📌 Using API proxy (fallback)', 'info');
-            fetchVastFromAPI()
-                .then(function(result) {
-                    if (result === null) return;
-                    if (typeof result === 'string' && result.startsWith('http')) {
-                        return fetchVastXML(result);
-                    }
-                    throw new Error('Invalid vast_url: ' + result);
-                })
-                .then(function(xml) {
-                    if (xml) {
-                        parseVASTAndPlay(xml);
-                    }
-                })
-                .catch(function(err) {
-                    logToScreen('❌ Error: ' + err.message, 'error');
-                    showError('Failed to load ad: ' + err.message, true);
-                    showLoading(false);
-                    playBtn.style.display = 'block';
+            navigator.clipboard.writeText(input.value)
+                .then(() => showToast('✅ Referral link copied!', 'success'))
+                .catch(() => {
+                    input.select();
+                    document.execCommand('copy');
+                    showToast('✅ Referral link copied!', 'success');
                 });
         }
+        window.copyShareLink = copyShareLink;
 
-        // ===== SKIP TIMER =====
-        function startSkipTimer() {
-            var rem = SKIP_DELAY;
-            skipBtn.disabled = true;
-            skipBtn.textContent = 'Skip ⏳ ' + rem + 's';
-            countdown.textContent = 'Ad · ' + rem + 's';
-            skipInterval = setInterval(function() {
-                rem--;
-                if (rem <= 0) {
-                    clearInterval(skipInterval);
-                    skipBtn.disabled = false;
-                    skipBtn.textContent = 'Skip ▶';
-                    countdown.textContent = 'Skip now';
-                } else {
-                    skipBtn.textContent = 'Skip ⏳ ' + rem + 's';
-                    countdown.textContent = 'Ad · ' + rem + 's';
+        // ================================================================
+        //  CHECK EXISTING SESSION
+        // ================================================================
+        function checkExistingSession() {
+            updateProgress(70, '<i class="fas fa-circle" style="color:#38ef7d;font-size:8px;margin-right:4px;"></i> Checking for existing account…');
+            const session = localStorage.getItem('taskExpertUser');
+            if (!session) {
+                updateProgress(85, '<i class="fas fa-circle" style="color:#38ef7d;font-size:8px;margin-right:4px;"></i> No existing session found');
+                return false;
+            }
+            try {
+                const data = JSON.parse(session);
+                if (!data.uid) return false;
+                return db.ref(`users/${data.uid}`).once('value')
+                    .then(snap => {
+                        if (!snap.exists()) {
+                            localStorage.removeItem('taskExpertUser');
+                            updateProgress(85,
+                                '<i class="fas fa-circle" style="color:#38ef7d;font-size:8px;margin-right:4px;"></i> No existing session found'
+                                );
+                            return false;
+                        }
+                        const userData = snap.val();
+                        const refCode = userData.referralCode || data.referralCode || '';
+                        updateProgress(95,
+                            '<i class="fas fa-check-circle" style="color:#38ef7d;margin-right:4px;"></i> Welcome back!'
+                            );
+                        showSuccess(
+                            userData.coins || 0,
+                            settings.signupBonus,
+                            0,
+                            userData.alt_account || false,
+                            refCode,
+                            userData.username || data.username || 'User'
+                        );
+                        return true;
+                    })
+                    .catch(() => {
+                        updateProgress(85,
+                            '<i class="fas fa-exclamation-triangle" style="color:#f9a825;margin-right:4px;"></i> Could not verify session'
+                            );
+                        return false;
+                    });
+            } catch {
+                updateProgress(85, '<i class="fas fa-circle" style="color:#38ef7d;font-size:8px;margin-right:4px;"></i> No existing session');
+                return false;
+            }
+        }
+
+        // ================================================================
+        //  AUTH STATE
+        // ================================================================
+        auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                const session = localStorage.getItem('taskExpertUser');
+                if (session) {
+                    try {
+                        const data = JSON.parse(session);
+                        if (data.uid === user.uid) return;
+                    } catch (e) {}
                 }
-            }, 1000);
-        }
-
-        function finishAd() {
-            clearInterval(skipInterval);
-            resetPlayer();
-            playBtn.style.display = 'block';
-            playBtn.textContent = '▶ Play Again';
-            logToScreen('✅ Ad finished. Play again?', 'info');
-        }
-
-        // ===== EVENT LISTENERS =====
-        skipBtn.addEventListener('click', function() {
-            if (skipBtn.disabled) return;
-            finishAd();
+                await auth.signOut();
+                showToast('Please sign up with a new Google account.', 'warning', 3000);
+            }
         });
 
-        playBtn.addEventListener('click', fetchAndPlay);
-        retryBtn.addEventListener('click', fetchAndPlay);
+        // ================================================================
+        //  INIT
+        // ================================================================
+        async function init() {
+            // Step 1: Connect
+            updateProgress(10, '<i class="fas fa-circle" style="color:#38ef7d;font-size:8px;margin-right:4px;"></i> Connecting…');
+            await new Promise(r => setTimeout(r, 400));
 
-        // ===== INIT =====
-        resetPlayer();
-        logToScreen('🚀 VAST 3.0 Player ready!', 'success');
-        logToScreen('📌 Using Direct VAST URL: ' + DIRECT_VAST_URL.substring(0, 60) + '...', 'info');
-        logToScreen('🔑 API_KEY: ' + API_KEY.substring(0, 10) + '...', 'info');
-        logToScreen('📌 ZONE_ID: ' + ZONE_ID, 'info');
+            // Step 2: Fetch settings
+            await fetchSettings();
 
-        if (API_KEY === 'YOUR_API_KEY_HERE' || ZONE_ID === 'YOUR_ZONE_ID_HERE') {
-            logToScreen('⚠️ WARNING: Replace API_KEY and ZONE_ID in the code!', 'warn');
+            // Step 3: Check session
+            const hasSession = await checkExistingSession();
+
+            // Step 4: Show appropriate card
+            if (!hasSession) {
+                signupCard.classList.remove('hidden');
+                signupCard.classList.add('visible');
+                successCard.classList.add('hidden');
+                updateProgress(100, '<i class="fas fa-check-circle" style="color:#38ef7d;margin-right:4px;"></i> Ready!');
+            } else {
+                updateProgress(100, '<i class="fas fa-check-circle" style="color:#38ef7d;margin-right:4px;"></i> Welcome back!');
+            }
+
+            // Step 5: Hide loading overlay smoothly
+            setTimeout(() => {
+                loadingOverlay.classList.add('hidden');
+            }, 500);
+
+            googleBtn.addEventListener('click', handleGoogleSignUp);
+            setInterval(fetchSettings, 300000);
+
+            console.log('✅ Task Expert ready.');
+            console.log('📡 Only essential data loaded from Firebase.');
         }
+
+        init().catch(err => {
+            console.error('Init error:', err);
+            signupCard.classList.remove('hidden');
+            signupCard.classList.add('visible');
+            loadingOverlay.classList.add('hidden');
+            showToast('⚠️ Failed to load settings. Using defaults.', 'warning', 4000);
+        });
     </script>
 </body>
 </html>
