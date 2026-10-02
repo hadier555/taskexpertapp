@@ -1,145 +1,77 @@
-<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#05070d">
-<title>TaskExpert Pro Player</title>
-<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<!doctype html><html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#05070d"><title>TaskExpert MAX Player</title>
 <style>
-:root{--bg:#05070d;--panel:#0d1420;--panel2:#111b2b;--line:#22324a;--text:#f7f9fc;--muted:#8d9db2;--a:#1fb7ff;--b:#7564ff}
-*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 50% -10%,#17243b 0,#05070d 45%);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
-button,input{font:inherit}.app{max-width:1180px;margin:auto;padding:12px 14px 30px}.top{height:58px;display:flex;align-items:center;gap:12px}.logo{font-size:21px;font-weight:900;white-space:nowrap}.logo i{font-style:normal;color:#59ddff}.top .grow{flex:1}.icon{width:42px;height:42px;border-radius:13px;background:#111d2d;border:1px solid #263850;color:#fff;display:grid;place-items:center;cursor:pointer}
-.search{background:linear-gradient(180deg,#111a28,#0b111b);border:1px solid #223149;border-radius:20px;padding:12px;box-shadow:0 20px 60px #0008}.searchrow{display:flex;gap:9px}.search input{flex:1;min-width:0;background:#070b13;color:#fff;border:1px solid #2a3b54;border-radius:15px;padding:14px 15px;outline:none}.load{padding:0 19px;border:0;border-radius:15px;color:#fff;font-weight:900;background:linear-gradient(135deg,var(--a),var(--b));cursor:pointer}
-.tabs{display:flex;gap:7px;overflow:auto;margin-top:11px}.tab{white-space:nowrap;padding:9px 12px;border-radius:999px;background:#0c1420;border:1px solid #1e2d42;color:#aebbd0;font-size:12px}.tab.active{color:#fff;border-color:#35617e;background:#122239}
-.stage{margin-top:12px;background:#000;border:1px solid #182538;border-radius:20px;overflow:hidden;box-shadow:0 25px 90px #000b}.screen{position:relative;aspect-ratio:16/9;background:#000;display:flex;align-items:center;justify-content:center;overflow:hidden}
-video,.poster{width:100%;height:100%;object-fit:contain;display:block}.poster{object-fit:contain}.empty{text-align:center;color:#71839b;padding:30px}.empty strong{display:block;color:#fff;font-size:22px;margin-bottom:7px}
-.center{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none}.bigplay{width:76px;height:76px;border-radius:50%;border:1px solid #ffffff3d;background:#ffffff18;backdrop-filter:blur(10px);display:grid;place-items:center;font-size:29px;opacity:.9}
-.gesture{position:absolute;top:45%;padding:10px 15px;border-radius:999px;background:#000b;border:1px solid #ffffff22;opacity:0;transform:scale(.9);transition:.18s;pointer-events:none}.gesture.show{opacity:1;transform:scale(1)}
-.hud{position:absolute;left:0;right:0;bottom:0;padding:34px 12px 11px;background:linear-gradient(transparent,#000d);transition:.2s}.screen.hidehud .hud{opacity:0;pointer-events:none}.range{width:100%;height:4px;accent-color:#25c4ff}.ctrl{display:flex;align-items:center;gap:7px;margin-top:8px}.ctrl button{min-width:37px;height:37px;border-radius:11px;background:#ffffff12;border:1px solid #ffffff1c;color:#fff;cursor:pointer}.time{font-size:12px;color:#d8e1ee;min-width:92px}.ctrl .spacer{flex:1}.select{height:37px;background:#111a28;color:#fff;border:1px solid #2a3b53;border-radius:10px;padding:0 8px;font-size:12px}
-.info{padding:12px;display:flex;gap:7px;flex-wrap:wrap}.chip{font-size:11px;color:#bdc9d8;padding:7px 10px;border:1px solid #203047;background:#0b1421;border-radius:999px}.chip.ok{color:#76efb2}.chip.err{color:#ff9d9d}
-.grid{display:grid;grid-template-columns:1.4fr .9fr;gap:12px;margin-top:12px}.panel{background:linear-gradient(180deg,#0e1725,#0a101a);border:1px solid #1b2a3e;border-radius:18px;padding:14px}.panel h3{font-size:14px;margin:0 0 11px}.actions{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.action{padding:11px 7px;background:#0c1624;border:1px solid #20314a;border-radius:12px;color:#dce6f2;text-align:center;font-size:11px;cursor:pointer}.action b{display:block;font-size:18px;margin-bottom:4px}.urlbox{display:flex;gap:7px}.urlbox input{min-width:0;flex:1;background:#070b13;border:1px solid #23344d;color:#fff;border-radius:11px;padding:10px;font-size:12px}.urlbox button{background:#16243a;border:1px solid #2a405d;color:#fff;border-radius:11px;padding:0 13px}.list{display:grid;gap:7px;max-height:190px;overflow:auto}.item{padding:10px;border:1px solid #1d2d43;background:#0b1320;border-radius:11px;font-size:11px;color:#aebdd0;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.note{font-size:10px;line-height:1.5;color:#6f8198;margin-top:10px}
-@media(max-width:760px){.app{padding:7px 8px 24px}.logo{font-size:18px}.top{height:52px}.grid{grid-template-columns:1fr}.actions{grid-template-columns:repeat(4,1fr)}.searchrow{flex-direction:column}.load{height:46px}.screen{aspect-ratio:16/10}.ctrl{gap:4px}.ctrl button{min-width:34px}.time{min-width:77px;font-size:11px}.select{max-width:58px}}
-</style>
-</head>
-<body>
-<div class="app">
-<header class="top">
-  <div class="logo">Task<i>Expert</i> Player</div><div class="grow"></div>
-  <button class="icon" id="share">↗</button><button class="icon" id="more">⋮</button>
-</header>
-
-<section class="search">
-  <div class="searchrow"><input id="url" placeholder="Paste video, image, .m3u8 or CDN URL…" autocomplete="off"><button class="load" id="load">▶ Load</button></div>
-  <div class="tabs"><span class="tab active">Player</span><span class="tab">URL</span><span class="tab">History</span><span class="tab">Saved</span></div>
-</section>
-
-<section class="stage">
- <div class="screen" id="screen">
-  <video id="video" playsinline preload="metadata" crossorigin="anonymous"></video>
-  <img id="image" class="poster" hidden>
-  <div class="empty" id="empty"><strong>TaskExpert Pro Player</strong>Paste a direct media URL to start.</div>
-  <div class="center" id="center"><div class="bigplay">▶</div></div>
-  <div class="gesture" id="gesture">10 seconds</div>
-  <div class="hud" id="hud">
-   <input id="progress" class="range" type="range" min="0" max="1000" value="0">
-   <div class="ctrl">
-    <button id="play">▶</button><button id="back">↶</button><button id="forward">↷</button>
-    <span class="time" id="time">00:00 / 00:00</span><div class="spacer"></div>
-    <select class="select" id="quality"><option>Auto</option></select>
-    <button id="speed">1×</button><button id="mute">🔊</button><button id="pip">▣</button><button id="fs">⛶</button>
-   </div>
-  </div>
- </div>
- <div class="info">
-  <span class="chip" id="type">No media</span><span class="chip" id="status">Ready</span>
-  <span class="chip" id="cache">Cache: idle</span><span class="chip" id="net">Network: —</span>
- </div>
-</section>
-
-<div class="grid">
- <section class="panel">
-  <h3>Player tools</h3>
-  <div class="actions">
-   <button class="action" id="subtitle"><b>CC</b>Subtitle</button>
-   <button class="action" id="rotate"><b>↻</b>Rotate</button>
-   <button class="action" id="save"><b>↓</b>Save cache</button>
-   <button class="action" id="clear"><b>⌫</b>Clear cache</button>
-  </div>
-  <div class="urlbox" style="margin-top:10px"><input id="suburl" placeholder="Optional subtitle .vtt URL"><button id="addsub">Add</button></div>
-  <div class="note">Double-tap left/right = seek. Double-tap center = play/pause. On supported browsers, PiP and fullscreen are available. HLS quality appears when the manifest exposes multiple levels.</div>
- </section>
-
- <section class="panel">
-  <h3>Recent media</h3><div class="list" id="history"><div class="item">No history yet</div></div>
- </section>
-</div>
-</div>
-
-<script>
-const $=id=>document.getElementById(id), v=$("video"), img=$("image"), screen=$("screen");
-let hls=null, current="", hideTimer=null, tapTimer=null, taps=0;
-const speeds=[.5,.75,1,1.25,1.5,1.75,2,2.5], historyKey="te_player_history_v2";
-
-function fmt(x){if(!isFinite(x))return"00:00";x=Math.max(0,Math.floor(x));return String(Math.floor(x/60)).padStart(2,"0")+":"+String(x%60).padStart(2,"0")}
-function status(t,err=false){$("status").textContent=t;$("status").className="chip "+(err?"err":"ok")}
-function guess(u){try{let p=new URL(u).pathname.toLowerCase();return /\.(jpg|jpeg|png|gif|webp|avif|bmp|svg)$/.test(p)?"image":p.includes(".m3u8")?"hls":"video"}catch{return"video"}}
-function shareURL(u){return location.origin+location.pathname+"?v="+encodeURIComponent(u)}
-function showHUD(){screen.classList.remove("hidehud");clearTimeout(hideTimer);hideTimer=setTimeout(()=>screen.classList.add("hidehud"),3500)}
-function addHistory(u){let a=JSON.parse(localStorage.getItem(historyKey)||"[]").filter(x=>x!==u);a.unshift(u);localStorage.setItem(historyKey,JSON.stringify(a.slice(0,20)));renderHistory()}
-function renderHistory(){let a=JSON.parse(localStorage.getItem(historyKey)||"[]"),box=$("history");box.innerHTML=a.length?a.map(x=>`<div class="item" title="${x.replace(/"/g,"&quot;")}">${x}</div>`).join(""):'<div class="item">No history yet</div>';[...box.children].forEach((e,i)=>e.onclick=()=>{let a=JSON.parse(localStorage.getItem(historyKey)||"[]");load(a[i])})}
-async function share(){let u=current?shareURL(current):location.href;if(navigator.share){try{await navigator.share({title:"TaskExpert Player",url:u});return}catch(e){}}try{await navigator.clipboard.writeText(u);status("Share link copied")}catch(e){status("Copy failed",true)}}
-$("share").onclick=share;
-
-function setQuality(){let q=$("quality");q.innerHTML="<option>Auto</option>";if(hls){hls.levels.forEach((x,i)=>{let o=document.createElement("option");o.value=i;o.textContent=(x.height||"?")+"p";q.appendChild(o)})}}
-$("quality").onchange=e=>{if(hls)hls.currentLevel=Number(e.target.value)-0}
-
-function load(u){
- try{new URL(u)}catch{return status("Invalid URL",true)}
- current=u; history.replaceState({}, "", "?v="+encodeURIComponent(u)); addHistory(u); $("type").textContent=guess(u).toUpperCase();
- if(hls){hls.destroy();hls=null} v.removeAttribute("src");v.load();img.hidden=true;v.hidden=true;$("empty").hidden=true;$("quality").innerHTML="<option>Auto</option>";
- if(guess(u)==="image"){img.src=u;img.hidden=false;status("Image loaded");return}
- v.hidden=false;
- if(guess(u)==="hls" && window.Hls && Hls.isSupported()){
-   hls=new Hls({enableWorker:true,lowLatencyMode:true});hls.loadSource(u);hls.attachMedia(v);
-   hls.on(Hls.Events.MANIFEST_PARSED,()=>{setQuality();status("HLS ready")});
-   hls.on(Hls.Events.ERROR,(e,d)=>{if(d.fatal)status("HLS error / CDN rules",true)});
- }else{
-   v.src=u;v.load();status("Loading…");
-   v.onloadedmetadata=()=>status("Ready to play");
-   v.onerror=()=>status("Media failed — check direct URL/CORS",true);
- }
- $("cache").textContent="Cache: ready";showHUD();
+:root{--bg:#05070d;--panel:#0c1421;--line:#22334b;--muted:#91a2b8;--cyan:#24c8ff;--violet:#7165ff}
+*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:#fff;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+body{min-height:100vh}.app{width:min(1200px,100%);margin:auto;padding:8px 10px 30px}.top{height:54px;display:flex;align-items:center;gap:8px}
+.brand{font-size:20px;font-weight:900}.brand em{font-style:normal;color:#55dcff}.spacer{flex:1}
+.topbtn,.pbtn{border:1px solid #29405c;background:#101c2d;color:#fff;border-radius:13px;cursor:pointer}.topbtn{width:44px;height:44px;font-size:20px}
+.urlbox{background:linear-gradient(180deg,#101a29,#09101b);border:1px solid #1e3047;border-radius:19px;padding:11px}.urlrow{display:flex;gap:8px}
+.urlrow input{min-width:0;flex:1;background:#060a12;border:1px solid #2a3c55;border-radius:13px;padding:13px;color:#fff;font-size:14px;outline:none}
+.load{padding:0 20px;border:0;border-radius:13px;color:#fff;font-weight:900;background:linear-gradient(135deg,var(--cyan),var(--violet));cursor:pointer}
+.nav{display:flex;gap:7px;overflow:auto;margin-top:9px}.nav span{padding:8px 12px;border-radius:999px;border:1px solid #203149;color:#a9b8ca;background:#0b1421;font-size:12px}.nav .active{color:#fff;border-color:#367da0;background:#11253a}
+.player-wrap{margin-top:11px;background:#000;border:1px solid #1b2a3d;border-radius:18px;overflow:hidden;box-shadow:0 25px 90px #000b}
+.player{position:relative;width:100%;aspect-ratio:16/9;background:#000;overflow:hidden}.player video,.player img{width:100%;height:100%;object-fit:contain;display:block;background:#000}
+.empty{position:absolute;inset:0;display:grid;place-content:center;text-align:center;color:#72839a}.empty b{display:block;color:#fff;font-size:22px;margin-bottom:7px}
+.center{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:82px;height:82px;border-radius:50%;display:grid;place-items:center;background:#ffffff13;border:1px solid #ffffff38;font-size:31px;transition:.2s;z-index:4;cursor:pointer;backdrop-filter:blur(6px)}
+.hud{position:absolute;left:0;right:0;bottom:0;padding:48px 12px 12px;background:linear-gradient(transparent,#000e);transition:.2s}.player.hide .hud{opacity:0}
+.seek{width:100%;height:5px;accent-color:#2cc8ff}.controls{display:flex;align-items:center;gap:6px;margin-top:8px;flex-wrap:wrap}.controls .grow{min-width:8px}
+.pbtn{height:44px;min-width:44px;padding:0 9px;font-weight:800}.time{font-size:12px;color:#d9e3ef;white-space:nowrap;min-width:92px}.grow{flex:1;min-width:20px}
+select{height:44px;background:#101c2d;color:#fff;border:1px solid #2b405c;border-radius:11px;padding:0 7px}
+.status{display:flex;gap:7px;flex-wrap:wrap;padding:10px}.chip{font-size:11px;padding:7px 10px;border-radius:999px;background:#0b1421;border:1px solid #203149;color:#aebdd0}.ok{color:#73f0b0}
+.tools{display:grid;grid-template-columns:repeat(5,1fr);gap:9px;margin-top:11px}.tool{background:linear-gradient(180deg,#101b2b,#0a111c);border:1px solid #20324a;border-radius:15px;padding:14px 5px;color:#dce7f3;text-align:center;cursor:pointer}.tool b{display:block;font-size:22px;margin-bottom:5px}.tool small{font-size:11px}
+.sharebox{margin-top:11px;padding:13px;background:#0c1522;border:1px solid #1f3046;border-radius:16px}.sharetitle{font-weight:800;font-size:13px;margin-bottom:8px}.shareline{display:flex;gap:7px}.shareline input{flex:1;min-width:0;background:#060a11;color:#fff;border:1px solid #243851;border-radius:10px;padding:10px;font-size:11px}.shareline button{border:1px solid #29405d;background:#132239;color:#fff;border-radius:10px;padding:0 12px}
+.note{font-size:10px;line-height:1.5;color:#71839a;margin-top:9px}
+@media(max-width:600px){
+.app{padding:5px 7px 24px}.brand{font-size:18px}.urlrow{flex-direction:column}.load{height:45px}
+.player-wrap{border-radius:14px}.player{aspect-ratio:16/9;min-height:285px}
+.controls{gap:5px;display:grid;grid-template-columns:42px 42px 42px minmax(76px,1fr) 58px 48px 44px 44px 44px}
+.controls .grow{display:none}.pbtn{height:40px;min-width:0;padding:0 5px}.time{min-width:0;font-size:11px}
+.controls select{height:40px;max-width:none;width:58px}.tools{gap:6px}.tool{padding:12px 2px}
 }
-$("load").onclick=()=>load($("url").value.trim());$("url").onkeydown=e=>{if(e.key==="Enter")$("load").click()};
-$("play").onclick=()=>v.paused?v.play():v.pause();v.onplay=()=>{$("play").textContent="❚❚";$("center").style.opacity=.0};v.onpause=()=>{$("play").textContent="▶";$("center").style.opacity=1};
-v.ontimeupdate=()=>{if(v.duration)$("progress").value=v.currentTime/v.duration*1000;$("time").textContent=fmt(v.currentTime)+" / "+fmt(v.duration)};
-$("progress").oninput=e=>{if(v.duration)v.currentTime=Number(e.target.value)/1000*v.duration};
-$("back").onclick=()=>v.currentTime=Math.max(0,v.currentTime-10);$("forward").onclick=()=>v.currentTime=Math.min(v.duration||Infinity,v.currentTime+10);
-let si=2;$("speed").onclick=()=>{si=(si+1)%speeds.length;v.playbackRate=speeds[si];$("speed").textContent=speeds[si]+"×"};
-$("mute").onclick=()=>{v.muted=!v.muted;$("mute").textContent=v.muted?"🔇":"🔊"};
-$("pip").onclick=async()=>{try{if(document.pictureInPictureElement)await document.exitPictureInPicture();else await v.requestPictureInPicture()}catch(e){status("PiP unavailable",true)}};
-$("fs").onclick=()=>document.fullscreenElement?document.exitFullscreen():screen.requestFullscreen?.();
-$("rotate").onclick=async()=>{try{if(screen.requestFullscreen&&!document.fullscreenElement)await screen.requestFullscreen();await screen.orientation?.lock("landscape")}catch(e){}};
-screen.onclick=e=>{
- showHUD();let r=screen.getBoundingClientRect(),x=e.clientX-r.left;
- if(e.target.closest("button,input,select"))return;
- taps++;clearTimeout(tapTimer);tapTimer=setTimeout(()=>{if(taps===1)v.paused?v.play():v.pause();taps=0},260);
- if(taps===2){taps=0;clearTimeout(tapTimer);let sec=x<r.width*.33?-10:x>r.width*.67?10:0;if(sec){v.currentTime=Math.max(0,Math.min(v.duration||Infinity,v.currentTime+sec));$("gesture").textContent=(sec>0?"+10 ":"-10 ")+"seconds";$("gesture").classList.add("show");setTimeout(()=>$("gesture").classList.remove("show"),500)}else v.paused?v.play():v.pause()}
-};
-$("subtitle").onclick=()=>{v.textTracks[0]&&(v.textTracks[0].mode=v.textTracks[0].mode==="showing"?"hidden":"showing")};
-$("addsub").onclick=()=>{let u=$("suburl").value.trim();if(!u)return;let t=document.createElement("track");t.kind="subtitles";t.src=u;t.srclang="en";t.label="Subtitle";t.default=true;v.appendChild(t);status("Subtitle added")};
-
-$("save").onclick=async()=>{
- if(!current)return status("Load media first",true);
- if(!("caches"in window))return status("Cache not supported",true);
- try{status("Caching…");let c=await caches.open("taskexpert-media-v2");let r=await fetch(current,{mode:"cors",credentials:"omit"});if(!r.ok)throw Error();await c.put(current,r.clone());$("cache").textContent="Cache: saved";status("Saved to browser cache")}catch(e){$("cache").textContent="Cache: unavailable";status("Server/CORS blocked cache",true)}
-};
-$("clear").onclick=async()=>{if("caches"in window){await caches.delete("taskexpert-media-v2");$("cache").textContent="Cache: cleared";status("Cache cleared")}};
-renderHistory();
-(async()=>{let q=new URLSearchParams(location.search).get("v");if(q){$("url").value=q;load(q)}})();
-setInterval(()=>{if(navigator.connection)$("net").textContent="Network: "+(navigator.connection.effectiveType||"online")},1500);
-</script>
-</body>
-</html>
+@media(orientation:landscape) and (max-height:600px){body{background:#000}.app{max-width:none;padding:0}.top,.urlbox,.nav,.status,.tools,.sharebox,.note{display:none}.player-wrap{margin:0;border:0;border-radius:0;width:100vw;height:100vh}.player{width:100vw;height:100vh;aspect-ratio:auto}.hud{padding:60px 18px 16px}.pbtn{height:47px;min-width:47px}.center{width:90px;height:90px}}
+</style></head><body><div class="app">
+<header class="top"><div class="brand">Task<em>Expert</em> MAX Player</div><div class="spacer"></div><button class="topbtn" id="share">↗</button><button class="topbtn">⋮</button></header>
+<section class="urlbox"><div class="urlrow"><input id="url" placeholder="Paste video / image / .m3u8 / CDN URL"><button class="load" id="load">▶ Load</button></div><div class="nav"><span class="active">Player</span><span>URL</span><span>History</span><span>Saved</span></div></section>
+<section class="player-wrap"><div class="player" id="player"><video id="video" playsinline preload="metadata"></video><img id="image" hidden><div class="empty" id="empty"><div><b>TaskExpert MAX</b>Load a media link to start.</div></div><div class="center" id="center">▶</div>
+<div class="hud"><input id="seek" class="seek" type="range" min="0" max="1000" value="0"><div class="controls">
+<button class="pbtn" id="play">▶</button><button class="pbtn" id="back">↶</button><button class="pbtn" id="forward">↷</button><span class="time" id="time">00:00 / 00:00</span><div class="grow"></div>
+<select id="quality"><option>Auto</option></select><button class="pbtn" id="speed">1×</button><button class="pbtn" id="mute">🔊</button><button class="pbtn" id="rotate">↻</button><button class="pbtn" id="full">⛶</button>
+</div></div></div><div class="status"><span class="chip" id="type">NO MEDIA</span><span class="chip ok" id="state">Ready</span><span class="chip" id="cache">Cache: idle</span></div></section>
+<div class="tools"><button class="tool" id="pip"><b>▣</b><small>PiP</small></button><button class="tool" id="land"><b>▣↔</b><small>Landscape</small></button><button class="tool"><b>CC</b><small>Subtitle</small></button><button class="tool" id="save"><b>↓</b><small>Cache</small></button><button class="tool" id="clear"><b>⌫</b><small>Clear</small></button></div>
+<section class="sharebox"><div class="sharetitle">🔗 Share this video</div><div class="shareline"><input id="sharelink" readonly placeholder="Load a video to generate share link"><button id="copy">Copy</button><button id="native">Share</button></div></section>
+<div class="note">Fullscreen + landscape use browser/device APIs. External CDN caching requires browser access/CORS; security, DRM, authentication and expired signed URLs are not bypassed.</div></div>
+<script>
+const $=id=>document.getElementById(id),v=$("video"),p=$("player"),img=$("image"),empty=$("empty");let current="",hls=null,hideTimer=null;
+function fmt(s){if(!isFinite(s))return"00:00";s=Math.max(0,Math.floor(s));return String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0")}
+function state(t){$("state").textContent=t}
+function typ(u){try{let x=new URL(u).pathname.toLowerCase();if(/\.(jpg|jpeg|png|gif|webp|avif|svg|bmp)$/.test(x))return"image";if(x.includes(".m3u8"))return"hls";return"video"}catch{return"video"}}
+function shareURL(u){return location.origin+location.pathname+"?v="+encodeURIComponent(u)}
+function load(u){try{new URL(u)}catch{return state("Invalid URL")}current=u;history.replaceState({}, "", "?v="+encodeURIComponent(u));$("sharelink").value=shareURL(u);if(hls){hls.destroy();hls=null}v.pause();v.removeAttribute("src");v.load();img.hidden=true;v.hidden=true;empty.hidden=true;let t=typ(u);$("type").textContent=t.toUpperCase();$("quality").innerHTML="<option>Auto</option>";if(t==="image"){img.src=u;img.hidden=false;state("Image ready");return}v.hidden=false;state("Loading…");if(t==="hls"&&window.Hls&&Hls.isSupported()){hls=new Hls({enableWorker:true});hls.loadSource(u);hls.attachMedia(v);hls.on(Hls.Events.MANIFEST_PARSED,()=>{state("HLS ready");hls.levels.forEach((x,i)=>{let o=document.createElement("option");o.value=i;o.textContent=(x.height||"?")+"p";$("quality").appendChild(o)})})}else{v.src=u;v.load();v.onloadedmetadata=()=>state("Ready to play");v.onerror=()=>state("Media error / check CDN")}}
+$("load").onclick=()=>load($("url").value.trim());$("url").onkeydown=e=>{if(e.key==="Enter")$("load").click()};async function togglePlay(){try{if(v.paused){await v.play();}else{v.pause();}}catch(e){state("Tap again to play")}}
+$("play").onclick=togglePlay;
+$("center").onclick=togglePlay;
+v.onclick=e=>{if(e.target===v)togglePlay()};
+v.onplay=()=>{empty.hidden=true;$("play").textContent="❚❚";$("center").style.opacity=0;};
+v.onpause=()=>{$("play").textContent="▶";$("center").style.opacity=1;};
+v.onended=()=>{$("play").textContent="▶";$("center").style.opacity=1;};v.ontimeupdate=()=>{$("seek").value=v.duration?v.currentTime/v.duration*1000:0;$("time").textContent=fmt(v.currentTime)+" / "+fmt(v.duration)};$("seek").oninput=e=>{if(v.duration)v.currentTime=e.target.value/1000*v.duration};$("back").onclick=()=>v.currentTime=Math.max(0,v.currentTime-10);$("forward").onclick=()=>v.currentTime=Math.min(v.duration||Infinity,v.currentTime+10);
+let speeds=[.5,.75,1,1.25,1.5,1.75,2,2.5],si=2;$("speed").onclick=()=>{si=(si+1)%speeds.length;v.playbackRate=speeds[si];$("speed").textContent=speeds[si]+"×"};$("mute").onclick=()=>{v.muted=!v.muted;$("mute").textContent=v.muted?"🔇":"🔊"};
+$("quality").onchange=e=>{if(hls)hls.currentLevel=Number(e.target.value)};async function full(){try{if(!document.fullscreenElement)await p.requestFullscreen();else await document.exitFullscreen()}catch(e){}}async function land(){try{if(!document.fullscreenElement)await p.requestFullscreen();if(screen.orientation?.lock)await screen.orientation.lock("landscape")}catch(e){state("Use device rotation if blocked")}}
+$("full").onclick=full;$("rotate").onclick=land;$("land").onclick=land;$("pip").onclick=async()=>{try{if(document.pictureInPictureElement)await document.exitPictureInPicture();else await v.requestPictureInPicture()}catch(e){state("PiP unavailable")}};
+async function share(){let u=$("sharelink").value||location.href;if(navigator.share){try{await navigator.share({title:"TaskExpert MAX Player",url:u});return}catch(e){}}await navigator.clipboard?.writeText(u);state("Share link copied")}$("share").onclick=share;$("native").onclick=share;$("copy").onclick=async()=>{await navigator.clipboard?.writeText($("sharelink").value);state("Share link copied")};
+$("save").onclick=async()=>{if(!current||!("caches"in window))return state("Cache unavailable");try{let c=await caches.open("taskexpert-max-media"),r=await fetch(current,{mode:"cors"});if(!r.ok)throw 0;await c.put(current,r.clone());$("cache").textContent="Cache: saved";state("Saved to cache")}catch(e){$("cache").textContent="Cache: blocked";state("CDN/CORS blocked")}};$("clear").onclick=async()=>{if("caches"in window)await caches.delete("taskexpert-max-media");$("cache").textContent="Cache: cleared";state("Cache cleared")};
+p.addEventListener("mousemove",()=>{p.classList.remove("hide");clearTimeout(hideTimer);hideTimer=setTimeout(()=>p.classList.add("hide"),3000)});
+let lastTap=0;
+p.addEventListener("touchend",e=>{
+ const target=e.target;
+ if(target.closest(".hud")||target.closest("button")||target.closest("select")||target===v)return;
+ const now=Date.now(),r=p.getBoundingClientRect(),x=e.changedTouches[0].clientX-r.left;
+ if(now-lastTap<280){
+   if(x<r.width*.35)v.currentTime=Math.max(0,v.currentTime-10);
+   else if(x>r.width*.65)v.currentTime=Math.min(v.duration||Infinity,v.currentTime+10);
+   else togglePlay();
+   lastTap=0;
+ }else{lastTap=now}
+},{passive:true});let q=new URLSearchParams(location.search).get("v");if(q){$("url").value=q;load(q)}
+</script></body></html>
