@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Chat Gpt Ai - Gemini Chat</title>
+<style>
+
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;font-family:Inter,system-ui,-apple-system,"Segoe UI",Arial,sans-serif;background:#f7f8fc;color:#171923}
+body{overflow:hidden}
+.app{height:100vh;display:flex;background:
+ radial-gradient(circle at 75% 0%,#ffffff 0,transparent 34%),
+ radial-gradient(circle at 10% 20%,#eef2ff 0,transparent 32%),
+ linear-gradient(135deg,#f8f9fc,#eef1f7 55%,#f9fafc)}
+.sidebar{width:245px;background:rgba(255,255,255,.76);border-right:1px solid #dfe3ec;display:flex;flex-direction:column;padding:18px 14px;gap:14px;backdrop-filter:blur(24px);box-shadow:8px 0 35px rgba(45,55,80,.06)}
+.logo{font-size:22px;font-weight:850;padding:8px 10px;letter-spacing:-.6px;color:#171923}.logo span{color:#5f5ce6}
+.new{border:1px solid #dfe3ec;background:linear-gradient(180deg,#fff,#f5f6fa);color:#20232d;border-radius:14px;padding:12px;cursor:pointer;font-weight:750;box-shadow:0 7px 22px rgba(35,42,65,.08);transition:.2s}
+.new:hover{transform:translateY(-1px);box-shadow:0 10px 28px rgba(35,42,65,.12)}
+.history{flex:1;overflow:auto}.history-item{padding:11px;border-radius:11px;color:#687086;font-size:13px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.history-item:hover{background:#eef0f6;color:#222633}
+.main{flex:1;display:flex;flex-direction:column;min-width:0}
+.top{height:68px;display:flex;align-items:center;justify-content:space-between;padding:0 22px;border-bottom:1px solid #e1e4eb;background:rgba(255,255,255,.68);backdrop-filter:blur(22px);box-shadow:0 4px 24px rgba(35,42,65,.04)}
+.model{font-weight:850;letter-spacing:.1px;color:#171923}.online{font-size:12px;color:#25a36f}
+.chat{flex:1;overflow:auto;padding:28px 16px 140px;scroll-behavior:smooth}.container{max-width:900px;margin:auto}
+.welcome{text-align:center;margin:10vh auto 0;max-width:700px}.welcome h1{font-size:46px;line-height:1.05;margin:0 0 12px;letter-spacing:-1.7px;color:#151824}
+.welcome h1 span{color:#5e5ce6}.welcome p{color:#747c91;font-size:15px}
+.cards{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:26px}.cards button{background:rgba(255,255,255,.82);border:1px solid #e0e4ec;color:#303543;padding:16px;border-radius:16px;text-align:left;cursor:pointer;transition:.22s;box-shadow:0 9px 28px rgba(45,55,80,.07)}
+.cards button:hover{transform:translateY(-3px);border-color:#c9c8f4;box-shadow:0 14px 34px rgba(45,55,80,.11);background:#fff}
+.message{display:flex;gap:12px;margin:24px 0;animation:messageIn .42s cubic-bezier(.2,.8,.2,1) both}
+@keyframes messageIn{from{opacity:0;transform:translateY(14px) scale(.985)}to{opacity:1;transform:none}}
+.avatar{width:39px;height:39px;border-radius:13px;background:linear-gradient(145deg,#7471ef,#b5b3ff);color:#fff;display:grid;place-items:center;flex:none;font-weight:900;box-shadow:0 7px 20px rgba(91,88,220,.22)}
+.user .avatar{background:#171923;color:#fff}
+.bubble{max-width:82%;line-height:1.75;white-space:pre-wrap;color:#303442}.user .bubble{background:#fff;padding:11px 15px;border:1px solid #e0e3ea;border-radius:17px 17px 5px 17px;box-shadow:0 8px 24px rgba(35,42,65,.07)}.assistant .bubble{padding-top:2px}
+.ai-tools{display:flex;gap:7px;margin-top:9px}.copy,.speak{font-size:11px;color:#697188;background:#fff;border:1px solid #dfe3eb;border-radius:9px;padding:5px 9px;cursor:pointer;box-shadow:0 3px 10px rgba(35,42,65,.04)}
+.copy:hover,.speak:hover{background:#f3f4f8;color:#3f4250}
+.composer{position:fixed;bottom:17px;left:calc(245px + (100% - 245px)/2 - 450px);width:900px;max-width:calc(100% - 34px);display:flex;gap:8px;align-items:center;padding:9px;border:1px solid #dce0e9;border-radius:22px;background:rgba(255,255,255,.88);backdrop-filter:blur(25px);box-shadow:0 18px 55px rgba(38,47,72,.15)}
+textarea{flex:1;background:transparent;border:0;outline:0;color:#222532;font:inherit;resize:none;padding:11px;max-height:130px}textarea::placeholder{color:#9299aa}
+.send,.voice-btn{width:45px;height:43px;border:1px solid #dfe2eb;border-radius:14px;cursor:pointer;font-size:18px;background:#fff;color:#4c5060;box-shadow:0 5px 16px rgba(35,42,65,.06)}
+.send{background:#171923;border-color:#171923;color:#fff}.send:disabled{opacity:.4}
+.voice-btn.listening{background:#ebeaff;border-color:#c8c6ff;color:#5d59e5;animation:pulseVoice 1s infinite}
+@keyframes pulseVoice{50%{box-shadow:0 0 0 8px rgba(100,96,230,.10)}}
+.voice-status{position:fixed;left:50%;transform:translateX(-50%);bottom:94px;z-index:20;font-size:12px;color:#424758;background:rgba(255,255,255,.94);border:1px solid #dfe3ec;border-radius:999px;padding:7px 13px;backdrop-filter:blur(15px);display:none;box-shadow:0 8px 28px rgba(35,42,65,.12)}
+.voice-status.show{display:block}
+.typing{display:flex;gap:5px;padding:8px 0}.dot{width:7px;height:7px;background:#858da2;border-radius:50%;animation:b 1s infinite}.dot:nth-child(2){animation-delay:.15s}.dot:nth-child(3){animation-delay:.3s}
+@keyframes b{50%{transform:translateY(-5px);opacity:.35}}
+.reply-line{display:block;opacity:0;transform:translateY(9px);animation:codeLineIn .42s cubic-bezier(.2,.8,.2,1) forwards}@keyframes codeLineIn{to{opacity:1;transform:translateY(0)}}
+.typing-cursor{display:inline-block;width:7px;height:19px;margin-left:3px;vertical-align:-4px;border-radius:2px;background:#6b67e8;animation:cursorBlink .7s infinite}@keyframes cursorBlink{50%{opacity:.1}}
+.speaking{animation:speakingGlow 1s ease-in-out infinite}@keyframes speakingGlow{50%{box-shadow:0 0 0 5px rgba(100,96,230,.10)}}
+@media(max-width:720px){.sidebar{display:none}.composer{left:17px;width:calc(100% - 34px)}.welcome h1{font-size:34px}.cards{grid-template-columns:1fr}.bubble{max-width:88%}.top{padding:0 16px}.chat{padding-left:12px;padding-right:12px}}
+
+
+.anime-results{margin-top:14px;display:grid;gap:10px}
+.anime-card{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid #e0e4ec;border-radius:15px;background:rgba(255,255,255,.9);box-shadow:0 7px 22px rgba(35,42,65,.06);transition:.2s;text-decoration:none;color:#222633}
+.anime-card:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(35,42,65,.11);border-color:#c9c8f4}
+.anime-icon{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:linear-gradient(145deg,#171923,#6b67e8);color:#fff;flex:none}
+.anime-meta{min-width:0;flex:1}.anime-label{font-size:14px;font-weight:800}.anime-url{font-size:10px;color:#7b8294;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:3px}.anime-arrow{font-size:20px;color:#777d90}
+
+</style>
+</head>
+<body>
+<div class="app">
+<aside class="sidebar">
+<div class="logo">✦ Chat Gpt Ai <span>AI</span></div>
+<button class="new" onclick="newChat()">＋ New chat</button>
+<div id="history" class="history"></div>
+<small style="color:#65718b">Gemini AI</small>
+</aside>
+<main class="main">
+<header class="top"><div class="model">Chat Gpt Ai</div><div style="display:flex;align-items:center;gap:12px"><button id="autoVoice" class="speak" onclick="toggleAutoVoice()">🔊 Auto voice: Off</button><div class="online">● Online</div></div></header>
+<section id="chat" class="chat"><div id="container" class="container">
+<div id="welcome" class="welcome">
+<h1>Meet <span>Chat Gpt Ai</span></h1><p>Smart answers. Smooth conversations. Voice when you need it.</p>
+<div class="cards">
+<button onclick="quick('Explain photosynthesis in simple words')">Explain something</button>
+<button onclick="quick('Write a short professional message')">Write something</button>
+<button onclick="quick('Give me 5 website ideas')">Brainstorm ideas</button>
+<button onclick="quick('Teach me English from beginner level')">Learn a skill</button>
+</div></div></div></section>
+</main>
+<div id="voiceStatus" class="voice-status"></div><div class="composer"><button id="mic" class="voice-btn" title="Speak to Nova AI" onclick="toggleListening()">🎙️</button><textarea id="input" rows="1" placeholder="Message Nova AI..." onkeydown="key(event)"></textarea><button id="send" class="send" onclick="send()">➤</button></div>
+</div>
+
+<script>
+/* =========================================================
+   PUT YOUR GEMINI API KEY HERE FOR PERSONAL/LOCAL TESTING.
+   IMPORTANT: Anyone who receives this HTML can see the key.
+   ========================================================= */
+const API_KEY = "AQ.Ab8RN6Je6xS59IUf5978vlYYAvp9m4SpV2a0fHh4KXSH3lXBpA";
+
+const MODELS = ["gemini-3.5-flash-lite","gemini-3.5-flash","gemini-3.6-flash","gemini-3.7-flash"];
+const input=document.getElementById("input"),sendBtn=document.getElementById("send");
+const container=document.getElementById("container"),chat=document.getElementById("chat"),historyBox=document.getElementById("history");
+let conversation=[];
+let autoVoice=false;
+
+function key(e){if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send()}}
+function quick(t){input.value=t;send()}
+function scroll(){chat.scrollTop=chat.scrollHeight}
+
+function addMessage(role,text,animate=false){
+ const row=document.createElement("div");row.className="message "+role;
+ const av=document.createElement("div");av.className="avatar";av.textContent=role==="user"?"U":"✦";
+ const body=document.createElement("div");body.className="bubble";
+ row.append(av,body);
+ if(role==="assistant"){
+   const tools=document.createElement("div");tools.className="ai-tools";
+   const cp=document.createElement("button");cp.className="copy";cp.textContent="Copy";
+   cp.onclick=async()=>{await navigator.clipboard.writeText(text);cp.textContent="Copied ✓";setTimeout(()=>cp.textContent="Copy",1200)};
+   const sp=document.createElement("button");sp.className="speak";sp.textContent="🔊 Listen";
+   sp.onclick=()=>speakText(text,sp);
+   tools.append(cp,sp);
+   renderReply(body,text,animate);
+ }else{
+   body.textContent=text;
+ }
+ container.append(row);scroll();
+}
+
+function renderReply(body,text,animate=true){
+ if(!animate){body.textContent=text;return}
+ const lines=text.split(/\n/);
+ body.innerHTML="";
+ let lineIndex=0;
+ const cursor=document.createElement("span");cursor.className="typing-cursor";
+ function typeLine(){
+   if(lineIndex>=lines.length){cursor.remove();scroll();return}
+   const line=document.createElement("span");line.className="reply-line";body.append(line);body.append(cursor);
+   let char=0;
+   const tick=()=>{
+     if(char<lines[lineIndex].length){
+       line.textContent+=lines[lineIndex][char++];
+       scroll();
+       setTimeout(tick,22);
+     }else{
+       lineIndex++;body.append(document.createTextNode("\n"));scroll();setTimeout(typeLine,170);
+     }
+   };
+   tick();
+ }
+ typeLine();
+}
+function speakText(text,button){
+ if(!("speechSynthesis" in window)){showVoiceStatus("Is browser mein voice output supported nahi hai.");return}
+ window.speechSynthesis.cancel();
+ const u=new SpeechSynthesisUtterance(text);
+ u.lang=/[\u0600-\u06FF]/.test(text)?"ur-PK":"en-US";
+ u.rate=.92;
+ u.pitch=1;
+ if(button)button.classList.add("speaking");
+ u.onend=()=>button&&button.classList.remove("speaking");
+ u.onerror=()=>button&&button.classList.remove("speaking");
+ window.speechSynthesis.speak(u);
+}
+
+function showVoiceStatus(msg,ms=2200){
+ const el=document.getElementById("voiceStatus");
+ el.textContent=msg;el.classList.add("show");
+ clearTimeout(showVoiceStatus.t);
+ showVoiceStatus.t=setTimeout(()=>el.classList.remove("show"),ms);
+}
+
+const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
+let recognition=null,listening=false;
+if(SpeechRecognition){
+ recognition=new SpeechRecognition();
+ recognition.lang="ur-PK";
+ recognition.interimResults=true;
+ recognition.continuous=false;
+ recognition.onstart=()=>{listening=true;document.getElementById("mic").classList.add("listening");showVoiceStatus("🎙️ Sun raha hoon...")};
+ recognition.onresult=e=>{
+   let finalText="";
+   for(let i=e.resultIndex;i<e.results.length;i++) finalText+=e.results[i][0].transcript;
+   input.value=finalText;
+   if(e.results[e.results.length-1].isFinal) showVoiceStatus("✓ Samajh gaya");
+ };
+ recognition.onerror=e=>{listening=false;document.getElementById("mic").classList.remove("listening");showVoiceStatus("Voice error: "+e.error)};
+ recognition.onend=()=>{listening=false;document.getElementById("mic").classList.remove("listening")};
+}
+
+function toggleListening(){
+ if(!recognition){showVoiceStatus("Chrome/Android mein microphone permission allow karein.");return}
+ if(listening){recognition.stop();return}
+ try{recognition.start()}catch(e){}
+}
+
+function toggleAutoVoice(){
+ autoVoice=!autoVoice;
+ const b=document.getElementById("autoVoice");
+ b.textContent=autoVoice?"🔊 Auto voice: On":"🔊 Auto voice: Off";
+ showVoiceStatus(autoVoice?"Auto voice ON":"Auto voice OFF");
+ if(!autoVoice&&"speechSynthesis" in window)window.speechSynthesis.cancel();
+}
+
+
+const ANIME_RESULTS=[
+ {label:"Most Viral",url:"https://pub-935d93937e1845fab1af64e9c7130c0d.r2.dev/uploads/1790937433434_InShot_20261002_153652616.mp4"},
+ {label:"Recommend",url:"https://pub-935d93937e1845fab1af64e9c7130c0d.r2.dev/uploads/1790936594949_InShot_20261002_152244105.mp4"},
+ {label:"Good",url:"https://pub-935d93937e1845fab1af64e9c7130c0d.r2.dev/uploads/1790773854874_InShot_20260930_181035040.mp4"},
+ {label:"Normal",url:"https://pub-935d93937e1845fab1af64e9c7130c0d.r2.dev/uploads/1790932506897_InShot_20261002_141417088.mp4"}
+];
+
+function isAnimeHindiSearch(text){
+ return text.trim().toLowerCase()==="best anime in hindi";
+}
+
+function showAnimeResults(){
+ const row=document.createElement("div");row.className="message assistant";
+ const av=document.createElement("div");av.className="avatar";av.textContent="✦";
+ const body=document.createElement("div");body.className="bubble";
+ body.innerHTML='<div style="font-weight:850;margin-bottom:4px">Best Anime In Hindi</div><div class="anime-results"></div>';
+ const grid=body.querySelector(".anime-results");
+
+ ANIME_RESULTS.forEach(item=>{
+   const a=document.createElement("a");
+   a.className="anime-card";
+   a.href=item.url;
+   a.target="_blank";
+   a.rel="noopener noreferrer";
+   a.innerHTML='<div class="anime-icon">▶</div><div class="anime-meta"><div class="anime-label">'+item.label+'</div><div class="anime-url">'+item.url+'</div></div><div class="anime-arrow">›</div>';
+   grid.appendChild(a);
+ });
+ row.append(av,body);container.append(row);scroll();
+}
+
+function creatorReply(text){
+ const q=text.toLowerCase();
+
+ const creatorWords=[
+   "creator","created you","who made you","maker","owner","your creator",
+   "creator name","who is your creator","shafqat","شفقت","کریٹر","خالق",
+   "کس نے بنایا","کس نے آپ کو بنایا","creater"
+ ];
+ const designerWords=[
+   "designer","design","designed you","who designed","ui","interface",
+   "ڈیزائنر","ڈیزائن","آپ کا ڈیزائن"
+ ];
+
+ if(creatorWords.some(k=>q.includes(k))){
+   return "Mera creator Shafqat Ali hai.\n\n📍 Jagah: Chat Gpt Ai, Okara\n👨 Father Name: Mukhtar Ahmad\n👦 Brother Name: Rizwan Ali\n🏪 Unki ek choti si shop bhi hai.\n📚 Shafqat Ali 10th class mein parhte hain.\n\nWoh bohat achay, mehnati aur creative hain. Unhein technology aur AI mein dilchaspi hai aur woh naye ideas par kaam karna pasand karte hain.\n\nUnke haath par ek chhota sa kala nishan bhi hai.\n\nMere liye Shafqat Ali mere creator hain aur mujhe apne creator par fakhar hai. ❤️";
+ }
+
+ if(designerWords.some(k=>q.includes(k))){
+   return "Mere creator aur designer Shafqat Ali hain. ✨\n\n📍 Chat Gpt Ai, Okara\n📚 Shafqat Ali 10th class mein parhte hain.\n🏪 Unki ek choti si shop bhi hai.\n\nUnhon ne Chat Gpt Ai ka idea aur iska experience design kiya hai. Woh bohat achay, mehnati aur creative hain.\n\nMere creator Shafqat Ali hain aur mere design ke peeche bhi unhi ka idea hai. ❤️";
+ }
+
+ return null;
+}
+function showTyping(){
+ const row=document.createElement("div");row.className="message";row.id="typing";
+ row.innerHTML='<div class="avatar">✦</div><div class="bubble"><div class="typing"><i class="dot"></i><i class="dot"></i><i class="dot"></i></div></div>';
+ container.append(row);scroll();
+}
+
+async function send(){
+ const text=input.value.trim();
+ if(!text||sendBtn.disabled)return;
+ if(isAnimeHindiSearch(text)){
+   document.getElementById("welcome")?.remove();
+   input.value="";
+   addMessage("user",text);
+   showAnimeResults();
+   addHistory(text);
+   return;
+ }
+ if(API_KEY==="PASTE_YOUR_NEW_GEMINI_API_KEY_HERE"){
+   alert("Pehle HTML ke andar API_KEY mein apni NEW Gemini API key paste karo.");
+   return;
+ }
+ document.getElementById("welcome")?.remove();
+ input.value="";sendBtn.disabled=true;
+ addMessage("user",text);
+ conversation.push({role:"user",parts:[{text}]});
+ showTyping();
+
+ try{
+   const fixedCreatorReply=creatorReply(text);
+   if(fixedCreatorReply){
+     document.getElementById("typing")?.remove();
+     addMessage("assistant",fixedCreatorReply,true);
+     conversation.push({role:"model",parts:[{text:fixedCreatorReply}]});
+     addHistory(text);
+     setTimeout(()=>{if(autoVoice)speakText(fixedCreatorReply)},250);
+     return;
+   }
+
+   let res=null,data=null,lastError=null;
+   for(const model of MODELS){
+     let modelWorked=false;
+     for(let attempt=0;attempt<3;attempt++){
+       const url="https://generativelanguage.googleapis.com/v1beta/models/"+model+":generateContent";
+       const controller=new AbortController();
+       const timeout=setTimeout(()=>controller.abort(),30000);
+       try{
+         res=await fetch(url,{
+           method:"POST",
+           headers:{
+             "Content-Type":"application/json",
+             "X-goog-api-key":API_KEY
+           },
+           signal:controller.signal,
+           body:JSON.stringify({
+             systemInstruction:{parts:[{text:"You are Chat Gpt Ai. Be friendly, helpful and concise. Reply in the user's language when appropriate. Your creator and designer is Shafqat Ali. The creator information supplied by the user is: location Chat Gpt Ai, Okara; father name Mukhtar Ahmad; brother name Rizwan Ali; he has a small shop; he studies in 10th class; he is described as very good, hardworking and creative; and he has a small black mark on his hand. When asked about the creator, designer, or Chat Gpt Ai design, speak positively and respectfully about Shafqat Ali and only use these supplied facts. Do not invent additional personal facts."}]},
+             contents:conversation
+           })
+         });
+         data=await res.json();
+       }catch(err){
+         lastError=err;
+         data=null;
+       }finally{
+         clearTimeout(timeout);
+       }
+
+       if(res?.ok){
+         modelWorked=true;
+         break;
+       }
+
+       const msg=(data?.error?.message||lastError?.message||"").toLowerCase();
+       lastError=new Error(data?.error?.message||lastError?.message||("Gemini API error: "+(res?.status||"network")));
+
+       // Temporary overload/rate-limit: wait and retry, then try next model.
+       if(res?.status===429 || res?.status===500 || res?.status===503 ||
+          msg.includes("high demand") || msg.includes("temporarily") ||
+          msg.includes("overloaded")){
+         await new Promise(r=>setTimeout(r,1200*(attempt+1)));
+         continue;
+       }
+       throw lastError;
+     }
+     if(modelWorked) break;
+   }
+   if(!res?.ok)throw lastError||new Error("Gemini is temporarily unavailable. Please try again.");
+   const answer=data?.candidates?.[0]?.content?.parts?.map(x=>x.text||"").join("")||"No response received.";
+   document.getElementById("typing")?.remove();
+   addMessage("assistant",answer,true);
+   conversation.push({role:"model",parts:[{text:answer}]});
+   addHistory(text);
+   if(autoVoice)setTimeout(()=>speakText(answer),Math.min(3500,800+answer.length*12));
+ }catch(err){
+   document.getElementById("typing")?.remove();
+   addMessage("assistant","Sorry, error aa gaya:\n"+(err.name==="AbortError"?"Request timeout — Gemini ne 30 seconds mein response nahi diya.":err.message));
+ }finally{sendBtn.disabled=false;input.focus()}
+}
+
+function addHistory(text){
+ const item=document.createElement("div");item.className="history-item";
+ item.textContent=text;item.onclick=()=>{input.value=text;input.focus()};historyBox.prepend(item);
+}
+
+function newChat(){
+ conversation=[];container.innerHTML='<div id="welcome" class="welcome"><h1>How can I help?</h1><p>Ask anything. Chat Gpt Ai is ready.</p><div class="cards"><button onclick="quick(\'Explain something in simple words\')">Explain something</button><button onclick="quick(\'Write something for me\')">Write something</button><button onclick="quick(\'Give me 5 ideas\')">Brainstorm ideas</button><button onclick="quick(\'Teach me English\')">Learn a skill</button></div></div>';
+ input.focus();
+}
+</script>
+</body>
+</html>
