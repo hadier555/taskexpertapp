@@ -1,6 +1,6 @@
 <!doctype html><html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#05070d"><title>TaskExpert MAX Player</title>
+<meta name="theme-color" content="#05070d"><title>TaskExpert Player</title>
 <style>
 :root{--bg:#05070d;--panel:#0c1421;--line:#22334b;--muted:#91a2b8;--cyan:#24c8ff;--violet:#7165ff}
 *{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:#fff;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
@@ -15,7 +15,7 @@ body{min-height:100vh}.app{width:min(1200px,100%);margin:auto;padding:8px 10px 3
 .player{position:relative;width:100%;aspect-ratio:16/9;background:#000;overflow:hidden}.player video,.player img{width:100%;height:100%;object-fit:contain;display:block;background:#000}
 .empty{position:absolute;inset:0;display:grid;place-content:center;text-align:center;color:#72839a}.empty b{display:block;color:#fff;font-size:22px;margin-bottom:7px}
 .center{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:82px;height:82px;border-radius:50%;display:grid;place-items:center;background:#ffffff13;border:1px solid #ffffff38;font-size:31px;transition:.2s;z-index:4;cursor:pointer;backdrop-filter:blur(6px)}
-.hud{position:absolute;left:0;right:0;bottom:0;padding:48px 12px 12px;background:linear-gradient(transparent,#000e);transition:.2s}.player.hide .hud{opacity:0}
+.hud{position:absolute;left:0;right:0;bottom:0;padding:48px 12px 12px;background:linear-gradient(transparent,#000e);transition:.2s}.player.hide .hud{opacity:0;display:none!important}
 .seek{width:100%;height:5px;accent-color:#2cc8ff}.controls{display:flex;align-items:center;gap:6px;margin-top:8px;flex-wrap:wrap}.controls .grow{min-width:8px}
 .pbtn{height:44px;min-width:44px;padding:0 9px;font-weight:800}.time{font-size:12px;color:#d9e3ef;white-space:nowrap;min-width:92px}.grow{flex:1;min-width:20px}
 select{height:44px;background:#101c2d;color:#fff;border:1px solid #2b405c;border-radius:11px;padding:0 7px}
@@ -31,36 +31,169 @@ select{height:44px;background:#101c2d;color:#fff;border:1px solid #2b405c;border
 .controls select{height:40px;max-width:none;width:58px}.tools{gap:6px}.tool{padding:12px 2px}
 }
 @media(orientation:landscape) and (max-height:600px){body{background:#000}.app{max-width:none;padding:0}.top,.urlbox,.nav,.status,.tools,.sharebox,.note{display:none}.player-wrap{margin:0;border:0;border-radius:0;width:100vw;height:100vh}.player{width:100vw;height:100vh;aspect-ratio:auto}.hud{padding:60px 18px 16px}.pbtn{height:47px;min-width:47px}.center{width:90px;height:90px}}
+.search-note{font-size:12px;color:#91a2b8;padding:8px 3px 1px}
+.search-note b{color:#55dcff}
+.player{position:relative}
+.player>.empty,.player>.center,.player>.hud,.player>.status{display:none!important}
+.video-message{display:none!important}
+.search-note{font-size:12px;color:#91a2b8;padding:8px 3px 1px}
+.search-note b{color:#55dcff}
 </style></head><body><div class="app">
 <header class="top"><div class="brand">Task<em>Expert</em> MAX Player</div><div class="spacer"></div><button class="topbtn" id="share">↗</button><button class="topbtn">⋮</button></header>
-<section class="urlbox"><div class="urlrow"><input id="url" placeholder="Paste video / image / .m3u8 / CDN URL"><button class="load" id="load">▶ Load</button></div><div class="nav"><span class="active">Player</span><span>URL</span><span>History</span><span>Saved</span></div></section>
-<section class="player-wrap"><div class="player" id="player"><video id="video" playsinline preload="metadata"></video><img id="image" hidden><div class="empty" id="empty"><div><b>TaskExpert MAX</b>Load a media link to start.</div></div><div class="center" id="center">▶</div>
+<section class="urlbox">
+<div class="urlrow"><input id="url" placeholder="Search: New Anime In Hindi  |  Paste video link" autocomplete="off"><button class="load" id="load">🔎 Search</button></div>
+<div class="nav"><span class="active">Search</span><span>Player</span><span>New Anime</span></div>
+<div class="search-note" id="searchNote">Type <b>New Anime In Hindi</b> to show the videos.</div>
+</section>
+<section class="player-wrap"><div class="player" id="player"><video id="video" playsinline preload="metadata"></video><img id="image" hidden><div class="empty" id="empty" hidden></div><div class="center" id="center">▶</div>
 <div class="hud"><input id="seek" class="seek" type="range" min="0" max="1000" value="0"><div class="controls">
 <button class="pbtn" id="play">▶</button><button class="pbtn" id="back">↶</button><button class="pbtn" id="forward">↷</button><span class="time" id="time">00:00 / 00:00</span><div class="grow"></div>
 <select id="quality"><option>Auto</option></select><button class="pbtn" id="speed">1×</button><button class="pbtn" id="mute">🔊</button><button class="pbtn" id="rotate">↻</button><button class="pbtn" id="full">⛶</button>
 </div></div></div><div class="status"><span class="chip" id="type">NO MEDIA</span><span class="chip ok" id="state">Ready</span><span class="chip" id="cache">Cache: idle</span></div></section>
 <div class="tools"><button class="tool" id="pip"><b>▣</b><small>PiP</small></button><button class="tool" id="land"><b>▣↔</b><small>Landscape</small></button><button class="tool"><b>CC</b><small>Subtitle</small></button><button class="tool" id="save"><b>↓</b><small>Cache</small></button><button class="tool" id="clear"><b>⌫</b><small>Clear</small></button></div>
 <section class="sharebox"><div class="sharetitle">🔗 Share this video</div><div class="shareline"><input id="sharelink" readonly placeholder="Load a video to generate share link"><button id="copy">Copy</button><button id="native">Share</button></div></section>
-<div class="note">Fullscreen + landscape use browser/device APIs. External CDN caching requires browser access/CORS; security, DRM, authentication and expired signed URLs are not bypassed.</div></div>
+<div class="note">Search <b>New Anime In Hindi</b> for the built-in playlist, or paste a direct video/CDN URL. Videos in the Anime playlist continue automatically.</div></div>
 <script>
-const $=id=>document.getElementById(id),v=$("video"),p=$("player"),img=$("image"),empty=$("empty");let current="",hls=null,hideTimer=null;
+const $=id=>document.getElementById(id),v=$("video"),p=$("player"),img=$("image"),empty=$("empty");
+const DEFAULT_PLAYLIST=[
+"https://pub-935d93937e1845fab1af64e9c7130c0d.r2.dev/uploads/1790932506897_InShot_20261002_141417088.mp4",
+"https://pub-935d93937e1845fab1af64e9c7130c0d.r2.dev/uploads/1790937433434_InShot_20261002_153652616.mp4",
+"https://pub-935d93937e1845fab1af64e9c7130c0d.r2.dev/uploads/1790857824348_InShot_20261001_172745706.mp4",
+"https://pub-935d93937e1845fab1af64e9c7130c0d.r2.dev/uploads/1790936594949_InShot_20261002_152244105.mp4",
+"https://pub-935d93937e1845fab1af64e9c7130c0d.r2.dev/uploads/1790773854874_InShot_20260930_181035040.mp4"
+];
+let current="",hls=null,hideTimer=null,playlistIndex=-1,playlistMode=false,playlistStarted=false,preloadingNext=false;
 function fmt(s){if(!isFinite(s))return"00:00";s=Math.max(0,Math.floor(s));return String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0")}
 function state(t){$("state").textContent=t}
 function typ(u){try{let x=new URL(u).pathname.toLowerCase();if(/\.(jpg|jpeg|png|gif|webp|avif|svg|bmp)$/.test(x))return"image";if(x.includes(".m3u8"))return"hls";return"video"}catch{return"video"}}
 function shareURL(u){return location.origin+location.pathname+"?v="+encodeURIComponent(u)}
-function load(u){try{new URL(u)}catch{return state("Invalid URL")}current=u;history.replaceState({}, "", "?v="+encodeURIComponent(u));$("sharelink").value=shareURL(u);if(hls){hls.destroy();hls=null}v.pause();v.removeAttribute("src");v.load();img.hidden=true;v.hidden=true;empty.hidden=true;let t=typ(u);$("type").textContent=t.toUpperCase();$("quality").innerHTML="<option>Auto</option>";if(t==="image"){img.src=u;img.hidden=false;state("Image ready");return}v.hidden=false;state("Loading…");if(t==="hls"&&window.Hls&&Hls.isSupported()){hls=new Hls({enableWorker:true});hls.loadSource(u);hls.attachMedia(v);hls.on(Hls.Events.MANIFEST_PARSED,()=>{state("HLS ready");hls.levels.forEach((x,i)=>{let o=document.createElement("option");o.value=i;o.textContent=(x.height||"?")+"p";$("quality").appendChild(o)})})}else{v.src=u;v.load();v.onloadedmetadata=()=>state("Ready to play");v.onerror=()=>state("Media error / check CDN")}}
-$("load").onclick=()=>load($("url").value.trim());$("url").onkeydown=e=>{if(e.key==="Enter")$("load").click()};async function togglePlay(){try{if(v.paused){await v.play();}else{v.pause();}}catch(e){state("Tap again to play")}}
+async function cacheUrl(u){
+ if(!("caches"in window))return false;
+ try{
+   const c=await caches.open("taskexpert-media-v2");
+   if(await c.match(u))return true;
+   const r=await fetch(u,{mode:"cors",cache:"no-store"});
+   if(!r.ok)throw 0;
+   await c.put(u,r.clone()); return true;
+ }catch(e){return false}
+}
+function nextPlaylistUrl(){
+ if(!playlistMode||!DEFAULT_PLAYLIST.length)return null;
+ return DEFAULT_PLAYLIST[(playlistIndex+1)%DEFAULT_PLAYLIST.length];
+}
+let preloadTimer=null;
+function preloadNext(){
+ clearTimeout(preloadTimer);
+ const next=nextPlaylistUrl(); if(!next||preloadingNext)return;
+ preloadTimer=setTimeout(async()=>{
+   preloadingNext=true;$("cache").textContent="Cache: preparing next";
+   const ok=await cacheUrl(next);
+   $("cache").textContent=ok?"Cache: next ready":"Cache: CDN/CORS limited";
+   preloadingNext=false;
+ },150);
+}
+function startDefaultPlaylist(){
+ if(playlistStarted||!DEFAULT_PLAYLIST.length)return;
+ playlistStarted=true;playlistMode=true;playlistIndex=0;
+ $("url").value=DEFAULT_PLAYLIST[0];
+ load(DEFAULT_PLAYLIST[0],{fromPlaylist:true,autoplay:false});
+ state("Playlist ready — tap ▶");
+}
+
+function load(u,opts={}){
+ try{new URL(u)}catch{return state("Invalid URL")}
+ current=u;
+ if(!opts.fromPlaylist){playlistMode=false;playlistIndex=-1;}
+ history.replaceState({}, "", "?v="+encodeURIComponent(u));
+ $("sharelink").value=shareURL(u);
+ if(hls){hls.destroy();hls=null}
+ v.pause();v.removeAttribute("src");v.load();img.hidden=true;v.hidden=true;empty.hidden=true;
+ let t=typ(u);$("type").textContent=t.toUpperCase();$("quality").innerHTML="<option>Auto</option>";
+ if(t==="image"){img.src=u;img.hidden=false;state("Image ready");return}
+ v.hidden=false;state("Loading…");
+ if(t==="hls"&&window.Hls&&Hls.isSupported()){
+   hls=new Hls({enableWorker:true});hls.loadSource(u);hls.attachMedia(v);
+   hls.on(Hls.Events.MANIFEST_PARSED,()=>{
+     state("HLS ready");
+     hls.levels.forEach((x,i)=>{let o=document.createElement("option");o.value=i;o.textContent=(x.height||"?")+"p";$("quality").appendChild(o)});
+     if(opts.autoplay){v.play().catch(()=>state("Tap ▶ if autoplay is blocked"));}
+   });
+ }else{
+   v.src=u;v.load();
+   v.onloadedmetadata=()=>{state("Ready to play");if(opts.autoplay){v.play().catch(()=>state("Tap ▶ if autoplay is blocked"));}};
+   v.onerror=()=>state("Media error / check CDN");
+ }
+}
+async function togglePlay(){try{if(v.paused){await v.play();}else{v.pause();}}catch(e){state("Tap again to play")}}
+const SEARCH_CODE="new anime in hindi";
+function normalizeSearch(s){return String(s||"").trim().toLowerCase().replace(/\\s+/g," ");}
+function looksLikeMediaUrl(s){
+ try{
+   const u=new URL(s);
+   return u.protocol==="http:"||u.protocol==="https:";
+ }catch(e){return false}
+}
+function searchCode(){
+ const raw=$("url").value.trim();
+ const q=normalizeSearch(raw);
+
+ // Search code => use the built-in Anime playlist.
+ if(q===SEARCH_CODE){
+   playlistStarted=true;playlistMode=true;playlistIndex=0;
+   $("searchNote").innerHTML='<b>New Anime In Hindi</b> — Please full watch all videos. New Anime videos will continue automatically.';
+   load(DEFAULT_PLAYLIST[0],{fromPlaylist:true,autoplay:true});
+   return;
+ }
+
+ // Direct video/CDN link => play that link immediately.
+ if(looksLikeMediaUrl(raw)){
+   playlistMode=false;playlistStarted=false;playlistIndex=-1;
+   $("searchNote").innerHTML='Direct video link loaded.';
+   load(raw,{fromPlaylist:false,autoplay:true});
+   return;
+ }
+
+ playlistMode=false;playlistStarted=false;playlistIndex=-1;
+ if(hls){hls.destroy();hls=null}
+ v.pause();v.removeAttribute("src");v.load();
+ $("type").textContent="NO MEDIA";
+ $("cache").textContent="Cache: idle";
+ $("searchNote").innerHTML='Use <b>New Anime In Hindi</b> or paste a direct video/CDN link.';
+ state("Search code or video link required");
+}
+$("load").onclick=searchCode;
+$("url").onkeydown=e=>{if(e.key==="Enter")searchCode()};
 $("play").onclick=togglePlay;
 $("center").onclick=togglePlay;
 v.onclick=e=>{if(e.target===v)togglePlay()};
-v.onplay=()=>{empty.hidden=true;$("play").textContent="❚❚";$("center").style.opacity=0;};
+v.onplay=()=>{
+ empty.hidden=true;$("play").textContent="❚❚";$("center").style.opacity=0;
+ state(playlistMode?"Playing playlist":"Playing");preloadNext();
+};
 v.onpause=()=>{$("play").textContent="▶";$("center").style.opacity=1;};
-v.onended=()=>{$("play").textContent="▶";$("center").style.opacity=1;};v.ontimeupdate=()=>{$("seek").value=v.duration?v.currentTime/v.duration*1000:0;$("time").textContent=fmt(v.currentTime)+" / "+fmt(v.duration)};$("seek").oninput=e=>{if(v.duration)v.currentTime=e.target.value/1000*v.duration};$("back").onclick=()=>v.currentTime=Math.max(0,v.currentTime-10);$("forward").onclick=()=>v.currentTime=Math.min(v.duration||Infinity,v.currentTime+10);
+v.onended=()=>{
+ $("play").textContent="▶";$("center").style.opacity=1;
+ if(playlistMode&&DEFAULT_PLAYLIST.length){
+   playlistIndex=(playlistIndex+1)%DEFAULT_PLAYLIST.length;
+   load(DEFAULT_PLAYLIST[playlistIndex],{fromPlaylist:true,autoplay:true});
+ }else state("Video ended");
+};
+v.ontimeupdate=()=>{
+ $("seek").value=v.duration?v.currentTime/v.duration*1000:0;
+ $("time").textContent=fmt(v.currentTime)+" / "+fmt(v.duration);
+ if(playlistMode&&v.duration&&v.currentTime/v.duration>.75)preloadNext();
+};$("seek").oninput=e=>{if(v.duration)v.currentTime=e.target.value/1000*v.duration};$("back").onclick=()=>v.currentTime=Math.max(0,v.currentTime-10);$("forward").onclick=()=>v.currentTime=Math.min(v.duration||Infinity,v.currentTime+10);
 let speeds=[.5,.75,1,1.25,1.5,1.75,2,2.5],si=2;$("speed").onclick=()=>{si=(si+1)%speeds.length;v.playbackRate=speeds[si];$("speed").textContent=speeds[si]+"×"};$("mute").onclick=()=>{v.muted=!v.muted;$("mute").textContent=v.muted?"🔇":"🔊"};
 $("quality").onchange=e=>{if(hls)hls.currentLevel=Number(e.target.value)};async function full(){try{if(!document.fullscreenElement)await p.requestFullscreen();else await document.exitFullscreen()}catch(e){}}async function land(){try{if(!document.fullscreenElement)await p.requestFullscreen();if(screen.orientation?.lock)await screen.orientation.lock("landscape")}catch(e){state("Use device rotation if blocked")}}
 $("full").onclick=full;$("rotate").onclick=land;$("land").onclick=land;$("pip").onclick=async()=>{try{if(document.pictureInPictureElement)await document.exitPictureInPicture();else await v.requestPictureInPicture()}catch(e){state("PiP unavailable")}};
-async function share(){let u=$("sharelink").value||location.href;if(navigator.share){try{await navigator.share({title:"TaskExpert MAX Player",url:u});return}catch(e){}}await navigator.clipboard?.writeText(u);state("Share link copied")}$("share").onclick=share;$("native").onclick=share;$("copy").onclick=async()=>{await navigator.clipboard?.writeText($("sharelink").value);state("Share link copied")};
-$("save").onclick=async()=>{if(!current||!("caches"in window))return state("Cache unavailable");try{let c=await caches.open("taskexpert-max-media"),r=await fetch(current,{mode:"cors"});if(!r.ok)throw 0;await c.put(current,r.clone());$("cache").textContent="Cache: saved";state("Saved to cache")}catch(e){$("cache").textContent="Cache: blocked";state("CDN/CORS blocked")}};$("clear").onclick=async()=>{if("caches"in window)await caches.delete("taskexpert-max-media");$("cache").textContent="Cache: cleared";state("Cache cleared")};
+async function share(){let u=$("sharelink").value||location.href;if(navigator.share){try{await navigator.share({title:"TaskExpert Player",url:u});return}catch(e){}}await navigator.clipboard?.writeText(u);state("Share link copied")}$("share").onclick=share;$("native").onclick=share;$("copy").onclick=async()=>{await navigator.clipboard?.writeText($("sharelink").value);state("Share link copied")};
+$("save").onclick=async()=>{
+ if(!current||!("caches"in window))return state("Cache unavailable");
+ $("cache").textContent="Cache: saving…";
+ const ok=await cacheUrl(current);
+ if(ok){$("cache").textContent="Cache: saved";state("Saved to cache");preloadNext();}
+ else{$("cache").textContent="Cache: blocked";state("CDN/CORS blocked")}
+};$("clear").onclick=async()=>{if("caches"in window)await caches.delete("taskexpert-media-v2");$("cache").textContent="Cache: cleared";state("Cache cleared")};
 p.addEventListener("mousemove",()=>{p.classList.remove("hide");clearTimeout(hideTimer);hideTimer=setTimeout(()=>p.classList.add("hide"),3000)});
 let lastTap=0;
 p.addEventListener("touchend",e=>{
@@ -73,5 +206,5 @@ p.addEventListener("touchend",e=>{
    else togglePlay();
    lastTap=0;
  }else{lastTap=now}
-},{passive:true});let q=new URLSearchParams(location.search).get("v");if(q){$("url").value=q;load(q)}
+},{passive:true});$("url").value="";
 </script></body></html>
